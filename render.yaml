@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: campus-club-web-dashboard
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: Dockerfile
+    healthCheckPath: /teacherDashboard
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: CAMPUS_DB_URL
+        fromDatabase:
+          name: campus-club-mysql
+          property: connectionString
+      - key: CAMPUS_DB_USER
+        fromDatabase:
+          name: campus-club-mysql
+          property: user
+      - key: CAMPUS_DB_PASSWORD
+        fromDatabase:
+          name: campus-club-mysql
+          property: password
+
+databases:
+  - name: campus-club-mysql
+    databaseName: campus_club_db
+    user: campus_admin
+    plan: free
+    region: oregon

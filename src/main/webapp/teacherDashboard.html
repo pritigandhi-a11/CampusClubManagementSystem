@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher / Faculty Dashboard - Campus Club Management System</title>
+    <style>
+        :root {
+            --navy-primary: #192A56;
+            --blue-accent: #2563EB;
+            --emerald-green: #10B981;
+            --amber-warning: #F59E0B;
+            --danger-red: #EF4444;
+            --bg-slate: #F8FAFC;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-slate);
+            color: #1E293B;
+            margin: 0;
+            padding: 24px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            background: var(--navy-primary);
+            color: #FFFFFF;
+            padding: 24px 30px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 700; }
+        .header p { margin: 4px 0 0 0; font-size: 13px; color: #94A3B8; }
+        .badge {
+            background-color: var(--blue-accent);
+            color: #FFFFFF;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .kpi-card {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .kpi-title { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #64748B; margin-bottom: 6px; }
+        .kpi-value { font-size: 28px; font-weight: 700; color: #0F172A; }
+        .kpi-sub { font-size: 12px; color: #94A3B8; margin-top: 4px; }
+        
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            border-bottom: 2px solid #E2E8F0;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748B;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s ease;
+        }
+        .tab-btn.active {
+            color: var(--blue-accent);
+            border-bottom-color: var(--blue-accent);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .section-card {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .section-card h2 {
+            margin: 0 0 16px 0;
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--navy-primary);
+            border-bottom: 2px solid #F1F5F9;
+            padding-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th {
+            background-color: #F8FAFC;
+            color: #475569;
+            font-weight: 600;
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #E2E8F0;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #F1F5F9;
+            vertical-align: middle;
+        }
+        tr:hover { background-color: #F8FAFC; }
+        .pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .pill-blue { background-color: #DBEAFE; color: #1E40AF; }
+        .pill-green { background-color: #DCFCE7; color: #166534; }
+        .pill-amber { background-color: #FEF3C7; color: #92400E; }
+        .pill-purple { background-color: #F3E8FF; color: #6B21A8; }
+        .action-btn {
+            background-color: var(--blue-accent);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .action-btn.approve { background-color: var(--emerald-green); }
+        .action-btn.reject { background-color: var(--danger-red); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Main Top Bar -->
+        <div class="header">
+            <div>
+                <h1>🎓 Teacher / Faculty Coordinator Dashboard</h1>
+                <p>Campus Club Management System &bull; Active View: <code>/teacherDashboard</code></p>
+            </div>
+            <div style="text-align: right;">
+                <span class="badge" id="role-badge">Faculty Coordinator</span>
+                <div style="margin-top: 6px; font-size: 13px;" id="teacher-profile-header">
+                    👤 Prof. David Miller (david.miller@campus.edu)
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Teacher Profile</div>
+                <div class="kpi-value" id="kpi-name" style="font-size: 18px;">Prof. David Miller</div>
+                <div class="kpi-sub" id="kpi-dept">Computer Science & Engineering</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Managed Clubs</div>
+                <div class="kpi-value" id="kpi-clubs" style="color: var(--blue-accent);">1</div>
+                <div class="kpi-sub">Coding & Algorithms Club</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Pending Requests</div>
+                <div class="kpi-value" id="kpi-requests" style="color: var(--amber-warning);">4</div>
+                <div class="kpi-sub">Applications awaiting approval</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Notices Broadcast</div>
+                <div class="kpi-value" id="kpi-notices" style="color: var(--emerald-green);">5</div>
+                <div class="kpi-sub">Published announcements</div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('tab-clubs', this)">🏫 Managed Clubs</button>
+            <button class="tab-btn" onclick="switchTab('tab-requests', this)">📋 Membership Applications</button>
+            <button class="tab-btn" onclick="switchTab('tab-notices', this)">📢 Notices & Broadcasts</button>
+            <button class="tab-btn" onclick="switchTab('tab-events', this)">🗓️ Club Events</button>
+        </div>
+
+        <!-- Tab 1: Managed Clubs -->
+        <div id="tab-clubs" class="tab-content active section-card">
+            <h2>🏫 Supervised Clubs Overview</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Club ID</th>
+                        <th>Club Name</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="clubs-tbody">
+                    <tr>
+                        <td>#1</td>
+                        <td><strong>Coding & Algorithms Club</strong></td>
+                        <td><span class="pill pill-blue">TECHNICAL</span></td>
+                        <td>Focuses on competitive programming, data structures, and hackathons.</td>
+                        <td><span class="pill pill-green">ACTIVE</span></td>
+                    </tr>
+                    <tr>
+                        <td>#2</td>
+                        <td><strong>Robotics & Automation Society</strong></td>
+                        <td><span class="pill pill-purple">INNOVATION</span></td>
+                        <td>Hands-on microcontrollers, IoT, and autonomous robotics design.</td>
+                        <td><span class="pill pill-green">ACTIVE</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tab 2: Membership Applications -->
+        <div id="tab-requests" class="tab-content section-card">
+            <h2>📋 Pending Student Membership Requests</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Register No</th>
+                        <th>Student Name</th>
+                        <th>Department</th>
+                        <th>Applied Club</th>
+                        <th>Application Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="requests-tbody">
+                    <tr>
+                        <td><code>1CC21CS042</code></td>
+                        <td>Sarah Jenkins</td>
+                        <td>Computer Science</td>
+                        <td>Coding & Algorithms Club</td>
+                        <td>2026-10-20 09:30</td>
+                        <td>
+                            <button class="action-btn approve" onclick="alert('Application 101 Approved!')">Approve</button>
+                            <button class="action-btn reject" onclick="alert('Application 101 Rejected')">Reject</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>1CC22EC018</code></td>
+                        <td>Michael Chang</td>
+                        <td>Electronics & Comm</td>
+                        <td>Robotics & Automation Society</td>
+                        <td>2026-10-21 11:15</td>
+                        <td>
+                            <button class="action-btn approve" onclick="alert('Application 102 Approved!')">Approve</button>
+                            <button class="action-btn reject" onclick="alert('Application 102 Rejected')">Reject</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tab 3: Notices & Broadcasts -->
+        <div id="tab-notices" class="tab-content section-card">
+            <h2>📢 Club Notices & Announcements</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Club</th>
+                        <th>Notice Title</th>
+                        <th>Broadcast Details</th>
+                        <th>Priority</th>
+                        <th>Published Date</th>
+                    </tr>
+                </thead>
+                <tbody id="notices-tbody">
+                    <tr>
+                        <td><strong>Coding Club</strong></td>
+                        <td>Spring CodeSprint 2026 Orientation</td>
+                        <td>Mandatory briefing for all participants in Lab 402 this Friday.</td>
+                        <td><span class="pill pill-amber">HIGH</span></td>
+                        <td>2026-10-21 14:00</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Robotics Club</strong></td>
+                        <td>Line Follower Bot Kit Distribution</td>
+                        <td>Registered teams can pick up hardware kits from Innovation Cell.</td>
+                        <td><span class="pill pill-blue">MEDIUM</span></td>
+                        <td>2026-10-19 16:30</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tab 4: Events -->
+        <div id="tab-events" class="tab-content section-card">
+            <h2>🗓️ Scheduled Club Events & Capacities</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Event Name</th>
+                        <th>Organizing Club</th>
+                        <th>Date & Time</th>
+                        <th>Venue</th>
+                        <th>Capacity</th>
+                    </tr>
+                </thead>
+                <tbody id="events-tbody">
+                    <tr>
+                        <td><strong>Algorithmic Problem Solving Workshop</strong></td>
+                        <td>Coding & Algorithms Club</td>
+                        <td>2026-11-05 10:00</td>
+                        <td>Seminar Hall A</td>
+                        <td><span class="pill pill-blue">80 Seats</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Autonomous Drone Design Bootcamp</strong></td>
+                        <td>Robotics & Automation Society</td>
+                        <td>2026-11-12 14:00</td>
+                        <td>Makerspace Lab 2</td>
+                        <td><span class="pill pill-blue">50 Seats</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // Auto-fetch dynamic data if server is reachable
+        const apiEndpoint = window.location.protocol === 'file:'
+            ? 'http://localhost:8080/teacherDashboard?format=json'
+            : '/teacherDashboard?format=json';
+
+        fetch(apiEndpoint)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.teacherName) {
+                    const header = document.getElementById('teacher-profile-header');
+                    if (header) header.textContent = '👤 ' + data.teacherName + ' (' + data.teacherEmail + ')';
+                    const name = document.getElementById('kpi-name');
+                    if (name) name.textContent = data.teacherName;
+                    const dept = document.getElementById('kpi-dept');
+                    if (dept) dept.textContent = data.department;
+                    const clubs = document.getElementById('kpi-clubs');
+                    if (clubs) clubs.textContent = data.managedClubsCount;
+                    const reqs = document.getElementById('kpi-requests');
+                    if (reqs) reqs.textContent = data.pendingRequestsCount;
+                    const notices = document.getElementById('kpi-notices');
+                    if (notices) notices.textContent = data.noticesCount;
+                }
+            })
+            .catch(() => {
+                // Static demo content renders cleanly
+            });
+    </script>
+</body>
+</html>

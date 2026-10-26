@@ -1,0 +1,6 @@
+﻿target/
+*.class
+.env
+tools/cloudflared.exe
+src/main/resources/application.properties
+src/main/resources/db.properties
