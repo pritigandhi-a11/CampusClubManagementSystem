@@ -157,4 +157,60 @@ public class TeacherDashboardRoutingTest {
         assertTrue(content.toString().contains("teacherName"));
         assertTrue(content.toString().contains("managedClubsCount"));
     }
+
+    @Test
+    @DisplayName("10. Root Route: GET / responds with 200 OK and renders Teacher Dashboard")
+    void testRootRouteAccessible() throws Exception {
+        URL url = new URL("http://localhost:" + testPort + "/");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setConnectTimeout(3000);
+        conn.setReadTimeout(3000);
+
+        int responseCode = conn.getResponseCode();
+        assertEquals(200, responseCode, "Root URL / must return 200 OK without 404");
+        assertEquals("text/html; charset=UTF-8", conn.getContentType());
+    }
+
+    @Test
+    @DisplayName("11. Lowercase Route: GET /teacherdashboard responds with 200 OK")
+    void testLowercaseRouteAccessible() throws Exception {
+        URL url = new URL("http://localhost:" + testPort + "/teacherdashboard");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setConnectTimeout(3000);
+        conn.setReadTimeout(3000);
+
+        int responseCode = conn.getResponseCode();
+        assertEquals(200, responseCode, "Lowercase /teacherdashboard must return 200 OK");
+        assertEquals("text/html; charset=UTF-8", conn.getContentType());
+    }
+
+    @Test
+    @DisplayName("12. Health Check Route: GET /healthz responds with 200 OK and status UP")
+    void testHealthzRoute() throws Exception {
+        URL url = new URL("http://localhost:" + testPort + "/healthz");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setConnectTimeout(3000);
+        conn.setReadTimeout(3000);
+
+        int responseCode = conn.getResponseCode();
+        assertEquals(200, responseCode, "/healthz must return 200 OK");
+        assertEquals("application/json", conn.getContentType());
+    }
+
+    @Test
+    @DisplayName("13. Root JSON Route: GET /?format=json responds with 200 OK and JSON")
+    void testRootJsonRoute() throws Exception {
+        URL url = new URL("http://localhost:" + testPort + "/?format=json");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setConnectTimeout(3000);
+        conn.setReadTimeout(3000);
+
+        int responseCode = conn.getResponseCode();
+        assertEquals(200, responseCode, "/?format=json must return 200 OK");
+        assertEquals("application/json", conn.getContentType());
+    }
 }

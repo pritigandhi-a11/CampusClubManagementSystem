@@ -21,6 +21,7 @@ import java.util.Map;
  * Queries the database using DatabaseConnection.getConnection() to fetch
  * teacher-specific data: profile details, managed clubs, notices, pending requests, and events.
  * Renders the clean frontend view or JSON payload.
+ * Kept strictly read-only for public access.
  */
 public class TeacherDashboardController implements HttpHandler {
 
@@ -255,16 +256,17 @@ public class TeacherDashboardController implements HttpHandler {
           .append("  <title>Teacher / Faculty Coordinator Dashboard - CCMS</title>\n")
           .append("  <style>\n")
           .append("    :root { --navy: #192A56; --blue: #2563EB; --emerald: #10B981; --amber: #F59E0B; --bg: #F8FAFC; }\n")
+          .append("    * { box-sizing: border-box; }\n")
           .append("    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); margin: 0; padding: 24px; color: #1e293b; }\n")
           .append("    .container { max-width: 1200px; margin: 0 auto; }\n")
-          .append("    .header { background: var(--navy); color: white; padding: 20px 24px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }\n")
+          .append("    .header { background: var(--navy); color: white; padding: 20px 24px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }\n")
           .append("    .header h1 { margin: 0; font-size: 22px; }\n")
           .append("    .badge { background: #3b82f6; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; text-transform: uppercase; }\n")
           .append("    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }\n")
           .append("    .card { background: white; border-radius: 10px; padding: 18px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }\n")
           .append("    .card h3 { margin: 0 0 6px 0; font-size: 13px; color: #64748b; text-transform: uppercase; }\n")
           .append("    .card .val { font-size: 26px; font-weight: 700; color: #0f172a; }\n")
-          .append("    .section { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 24px; }\n")
+          .append("    .section { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }\n")
           .append("    .section h2 { margin-top: 0; font-size: 16px; color: var(--navy); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }\n")
           .append("    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }\n")
           .append("    th { text-align: left; padding: 10px; background: #f8fafc; color: #475569; font-weight: 600; border-bottom: 1px solid #cbd5e1; }\n")
@@ -385,9 +387,6 @@ public class TeacherDashboardController implements HttpHandler {
                    .replace("'", "&#39;");
     }
 
-    /**
-     * Data Transfer Object representing Teacher Dashboard state.
-     */
     public static class TeacherDashboardData {
         public int teacherId;
         public String teacherUsername;
@@ -423,7 +422,10 @@ public class TeacherDashboardController implements HttpHandler {
 
         private String escapeJson(String s) {
             if (s == null) return "";
-            return s.replace("\"", "\\\"");
+            return s.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r");
         }
     }
 }

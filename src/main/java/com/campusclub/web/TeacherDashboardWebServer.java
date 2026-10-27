@@ -55,7 +55,7 @@ public final class TeacherDashboardWebServer {
             int port = initialPort;
             for (int attempt = 0; attempt < 10; attempt++) {
                 try {
-                    server = HttpServer.create(new InetSocketAddress(port), 0);
+                    server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
                     activePort = port;
                     break;
                 } catch (IOException e) {
@@ -69,14 +69,47 @@ public final class TeacherDashboardWebServer {
 
             TeacherDashboardController controller = new TeacherDashboardController();
 
-            // 1. Primary Routes
+            // 1. Primary Explicit Routes
             server.createContext("/teacherDashboard", controller);
             server.createContext("/teacher-dashboard", controller);
             server.createContext("/api/teacherDashboard", controller);
             server.createContext("/teacherDashboard.jsp", controller);
             server.createContext("/teacherDashboard.html", controller);
 
-            // 2. Static / JSP WebApp View Handler: /webapp/
+            // 2. Case Variations & Route Aliases
+            server.createContext("/teacherdashboard", controller);
+            server.createContext("/TeacherDashboard", controller);
+            server.createContext("/dashboard", controller);
+            server.createContext("/healthz", exchange -> {
+                byte[] response = "{\"status\":\"UP\"}".getBytes(StandardCharsets.UTF_8);
+                exchange.getResponseHeaders().set("Content-Type", "application/json");
+                exchange.sendResponseHeaders(200, response.length);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(response);
+                }
+            });
+
+            // 3. Root Context ("/") Handler: Catches root URL and prevents 404s
+            server.createContext("/", exchange -> {
+                String path = exchange.getRequestURI().getPath();
+                if (path == null || path.isEmpty() || path.equals("/") ||
+                    path.equalsIgnoreCase("/index.html") ||
+                    path.equalsIgnoreCase("/index.jsp") ||
+                    path.toLowerCase().startsWith("/teacherdashboard") ||
+                    path.toLowerCase().startsWith("/teacher-dashboard") ||
+                    path.toLowerCase().startsWith("/dashboard") ||
+                    path.equalsIgnoreCase("/health")) {
+                    controller.handle(exchange);
+                } else if (path.startsWith("/webapp")) {
+                    new WebAppFileHandler(controller).handle(exchange);
+                } else {
+                    exchange.getResponseHeaders().set("Location", "/teacherDashboard");
+                    exchange.sendResponseHeaders(302, -1);
+                    exchange.close();
+                }
+            });
+
+            // 4. Static / JSP WebApp View Handler: /webapp/
             server.createContext("/webapp", new WebAppFileHandler(controller));
 
             server.setExecutor(Executors.newCachedThreadPool());

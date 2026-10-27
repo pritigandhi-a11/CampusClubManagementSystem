@@ -26,15 +26,13 @@ public class CampusClubApplication {
             }
         }
 
-        // Start background Web Server for /teacherDashboard route
-        new Thread(() -> {
-            try {
-                int port = com.campusclub.web.TeacherDashboardWebServer.startServerIfNotRunning();
-                System.out.println("[CCMS] Teacher Dashboard web route active at http://localhost:" + port + "/teacherDashboard");
-            } catch (Exception e) {
-                System.err.println("[CCMS] Notice: Could not start web route: " + e.getMessage());
-            }
-        }, "CCMS-WebServer-Thread").start();
+        // Start Web Server for /teacherDashboard route
+        try {
+            int port = com.campusclub.web.TeacherDashboardWebServer.startServerIfNotRunning();
+            System.out.println("[CCMS] Teacher Dashboard web route active at http://0.0.0.0:" + port + "/teacherDashboard");
+        } catch (Exception e) {
+            System.err.println("[CCMS] Notice: Could not start web route: " + e.getMessage());
+        }
 
         // Launch the Login UI on Event Dispatch Thread (EDT) only if display environment is present
         if (!java.awt.GraphicsEnvironment.isHeadless()) {
@@ -44,6 +42,12 @@ public class CampusClubApplication {
             });
         } else {
             System.out.println("[CCMS] Headless environment detected: Running in standalone Web Server mode.");
+            // Keep container process alive in cloud deployment (e.g. Render/Docker)
+            try {
+                Thread.currentThread().join();
+            } catch (InterruptedException e) {
+                System.out.println("[CCMS] Server shutting down...");
+            }
         }
     }
 }

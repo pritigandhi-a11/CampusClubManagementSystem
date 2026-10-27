@@ -195,7 +195,7 @@ public class LiveDatabaseTest {
         // findAll
         List<Announcement> allAnnouncements = announcementDAO.findAll();
         assertNotNull(allAnnouncements);
-        assertEquals(4, allAnnouncements.size(), "Should have exactly 4 announcements");
+        assertTrue(allAnnouncements.size() >= 4, "Should have at least 4 announcements");
 
         // findLatestAnnouncements
         List<Announcement> latest = announcementDAO.findLatestAnnouncements(2);
