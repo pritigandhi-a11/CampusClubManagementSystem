@@ -132,18 +132,38 @@
         .pill-green { background-color: #DCFCE7; color: #166534; }
         .pill-amber { background-color: #FEF3C7; color: #92400E; }
         .pill-purple { background-color: #F3E8FF; color: #6B21A8; }
-        .action-btn {
-            background-color: var(--blue-accent);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
+        .pill-gray { background-color: #F1F5F9; color: #475569; border: 1px solid #E2E8F0; }
+        .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-size: 13px;
             font-weight: 600;
+            border-radius: 6px;
+            border: 1px solid transparent;
             cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            text-decoration: none;
         }
-        .action-btn.approve { background-color: var(--emerald-green); }
-        .action-btn.reject { background-color: var(--danger-red); }
+        .btn-primary { background-color: var(--blue-accent); color: white; }
+        .btn-primary:hover { background-color: #1d4ed8; }
+        .btn-outline { background-color: rgba(255,255,255,0.12); color: white; border-color: rgba(255,255,255,0.3); }
+        .btn-outline:hover { background-color: rgba(255,255,255,0.22); }
+        .status-toast { font-size: 12px; color: #94a3b8; }
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header { flex-direction: column; align-items: flex-start; }
+            .header-actions { width: 100%; justify-content: flex-start; }
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .header-actions, .tab-bar { display: none !important; }
+            .tab-content { display: block !important; }
+            .section-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+        }
     </style>
 </head>
 <body>
@@ -154,10 +174,14 @@
                 <h1>🎓 Teacher / Faculty Coordinator Dashboard</h1>
                 <p>Campus Club Management System &bull; Active View: <code>/teacherDashboard</code></p>
             </div>
-            <div style="text-align: right;">
-                <span class="badge" id="role-badge">Faculty Coordinator</span>
-                <div style="margin-top: 6px; font-size: 13px;" id="teacher-profile-header">
-                    👤 Prof. David Miller (david.miller@campus.edu)
+            <div class="header-actions">
+                <button id="btn-refresh" class="btn btn-primary" onclick="refreshDashboardData()">🔄 Refresh Data</button>
+                <button id="btn-print" class="btn btn-outline" onclick="window.print()">🖨️ Print Report</button>
+                <div style="text-align: right; margin-left: 8px;">
+                    <span class="badge" id="role-badge">Faculty Coordinator</span>
+                    <div style="margin-top: 6px; font-size: 13px;" id="teacher-profile-header">
+                        👤 Prof. David Miller (david.miller@campus.edu)
+                    </div>
                 </div>
             </div>
         </div>
@@ -188,10 +212,12 @@
 
         <!-- Navigation Tabs -->
         <div class="tab-bar">
-            <button class="tab-btn active" onclick="switchTab('tab-clubs', this)">🏫 Managed Clubs</button>
+            <button class="tab-btn active" onclick="switchTab('all', this)">📋 All Overview</button>
+            <button class="tab-btn" onclick="switchTab('tab-clubs', this)">🏫 Managed Clubs</button>
             <button class="tab-btn" onclick="switchTab('tab-requests', this)">📋 Membership Applications</button>
             <button class="tab-btn" onclick="switchTab('tab-notices', this)">📢 Notices & Broadcasts</button>
             <button class="tab-btn" onclick="switchTab('tab-events', this)">🗓️ Club Events</button>
+            <span id="last-updated" class="status-toast" style="margin-left: auto; align-self: center;">● Live</span>
         </div>
 
         <!-- Tab 1: Managed Clubs -->
@@ -237,7 +263,7 @@
                         <th>Department</th>
                         <th>Applied Club</th>
                         <th>Application Date</th>
-                        <th>Action</th>
+                        <th>Status / Action</th>
                     </tr>
                 </thead>
                 <tbody id="requests-tbody">
@@ -248,8 +274,8 @@
                         <td>Coding & Algorithms Club</td>
                         <td>2026-10-20 09:30</td>
                         <td>
-                            <button class="action-btn approve" onclick="alert('Application 101 Approved!')">Approve</button>
-                            <button class="action-btn reject" onclick="alert('Application 101 Rejected')">Reject</button>
+                            <span class="pill pill-amber">PENDING</span>
+                            <span class="pill pill-gray" style="font-size:11px; margin-left:4px;" title="Decisions handled securely via Coordinator Swing App">Read-Only</span>
                         </td>
                     </tr>
                     <tr>
@@ -259,8 +285,8 @@
                         <td>Robotics & Automation Society</td>
                         <td>2026-10-21 11:15</td>
                         <td>
-                            <button class="action-btn approve" onclick="alert('Application 102 Approved!')">Approve</button>
-                            <button class="action-btn reject" onclick="alert('Application 102 Rejected')">Reject</button>
+                            <span class="pill pill-amber">PENDING</span>
+                            <span class="pill pill-gray" style="font-size:11px; margin-left:4px;" title="Decisions handled securely via Coordinator Swing App">Read-Only</span>
                         </td>
                     </tr>
                 </tbody>
@@ -334,38 +360,74 @@
 
     <script>
         function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            btn.classList.add('active');
+            var tabs = document.querySelectorAll('.tab-content');
+            var buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(function(b) { b.classList.remove('active'); });
+            if (btn) btn.classList.add('active');
+            tabs.forEach(function(el) {
+                if (tabId === 'all' || el.id === tabId) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
         }
 
-        // Auto-fetch dynamic data if server is reachable
-        const apiEndpoint = window.location.protocol === 'file:'
-            ? 'http://localhost:8080/teacherDashboard?format=json'
-            : '/teacherDashboard?format=json';
+        function refreshDashboardData() {
+            var btn = document.getElementById('btn-refresh');
+            var originalText = btn ? btn.innerHTML : '🔄 Refresh Data';
+            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Refreshing...'; }
 
-        fetch(apiEndpoint)
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.teacherName) {
-                    const header = document.getElementById('teacher-profile-header');
-                    if (header) header.textContent = '👤 ' + data.teacherName + ' (' + data.teacherEmail + ')';
-                    const name = document.getElementById('kpi-name');
-                    if (name) name.textContent = data.teacherName;
-                    const dept = document.getElementById('kpi-dept');
-                    if (dept) dept.textContent = data.department;
-                    const clubs = document.getElementById('kpi-clubs');
-                    if (clubs) clubs.textContent = data.managedClubsCount;
-                    const reqs = document.getElementById('kpi-requests');
-                    if (reqs) reqs.textContent = data.pendingRequestsCount;
-                    const notices = document.getElementById('kpi-notices');
-                    if (notices) notices.textContent = data.noticesCount;
-                }
-            })
-            .catch(() => {
-                // Static demo content renders cleanly
-            });
+            var apiEndpoint = window.location.protocol === 'file:'
+                ? 'http://localhost:8080/teacherDashboard?format=json'
+                : '/teacherDashboard?format=json';
+
+            fetch(apiEndpoint)
+                .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+                .then(function(data) {
+                    if (data) {
+                        if (data.teacherName) {
+                            var elHeader = document.getElementById('teacher-profile-header');
+                            if (elHeader) elHeader.textContent = '👤 ' + data.teacherName + ' (' + (data.teacherEmail || '') + ')';
+                            var elName = document.getElementById('kpi-name');
+                            if (elName) elName.textContent = data.teacherName;
+                        }
+                        if (data.department) {
+                            var elDept = document.getElementById('kpi-dept');
+                            if (elDept) elDept.textContent = data.department;
+                        }
+                        if (data.managedClubsCount !== undefined) {
+                            var elClubs = document.getElementById('kpi-clubs');
+                            if (elClubs) elClubs.textContent = data.managedClubsCount;
+                        }
+                        if (data.pendingRequestsCount !== undefined) {
+                            var elReqs = document.getElementById('kpi-requests');
+                            if (elReqs) elReqs.textContent = data.pendingRequestsCount;
+                        }
+                        if (data.noticesCount !== undefined) {
+                            var elNotices = document.getElementById('kpi-notices');
+                            if (elNotices) elNotices.textContent = data.noticesCount;
+                        }
+                        var stamp = document.getElementById('last-updated');
+                        if (stamp) {
+                            var now = new Date();
+                            var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+                            stamp.textContent = 'Refreshed at ' + timeStr;
+                        }
+                    }
+                })
+                .catch(function(err) {
+                    console.warn('Refresh notice:', err);
+                })
+                .finally(function() {
+                    if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+                });
+        }
+
+        // Initialize view: default to showing all sections for complete overview
+        switchTab('all', document.querySelector('.tab-btn'));
+        // Initial auto-fetch
+        refreshDashboardData();
     </script>
 </body>
 </html>

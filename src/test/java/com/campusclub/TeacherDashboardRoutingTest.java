@@ -213,4 +213,65 @@ public class TeacherDashboardRoutingTest {
         assertEquals(200, responseCode, "/?format=json must return 200 OK");
         assertEquals("application/json", conn.getContentType());
     }
+
+    @Test
+    @DisplayName("14. Interactive Buttons: Verify Tab Navigation, Refresh, and Print Buttons")
+    void testInteractiveDashboardButtons() throws Exception {
+        URL url = new URL("http://localhost:" + testPort + "/teacherDashboard");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setConnectTimeout(3000);
+        conn.setReadTimeout(3000);
+
+        assertEquals(200, conn.getResponseCode());
+
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+            String line;
+            while ((line = in.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        }
+        String html = content.toString();
+
+        // 1. Verify Header Action Buttons
+        assertTrue(html.contains("id=\"btn-refresh\""), "HTML must contain Refresh Data button");
+        assertTrue(html.contains("id=\"btn-print\""), "HTML must contain Print Report button");
+
+        // 2. Verify Tab Navigation Buttons
+        assertTrue(html.contains("tab-all"), "HTML must contain All Overview tab button");
+        assertTrue(html.contains("tab-clubs"), "HTML must contain Managed Clubs tab button");
+        assertTrue(html.contains("tab-notices"), "HTML must contain Notices tab button");
+        assertTrue(html.contains("tab-requests"), "HTML must contain Membership Applications tab button");
+        assertTrue(html.contains("tab-events"), "HTML must contain Events tab button");
+
+        // 3. Verify JavaScript Event Handlers
+        assertTrue(html.contains("filterSections("), "HTML must contain filterSections tab switcher");
+        assertTrue(html.contains("refreshDashboardData()"), "HTML must contain refreshDashboardData fetch handler");
+    }
+
+    @Test
+    @DisplayName("15. Read-Only Compliance: No mutating actions on public dashboard")
+    void testReadOnlyComplianceNoMutatingActions() throws Exception {
+        URL url = new URL("http://localhost:" + testPort + "/teacherDashboard");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setConnectTimeout(3000);
+        conn.setReadTimeout(3000);
+
+        assertEquals(200, conn.getResponseCode());
+
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+            String line;
+            while ((line = in.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        }
+        String html = content.toString();
+
+        // Must display read-only status and must NOT have mock approve/reject alerts
+        assertTrue(html.contains("Read-Only"), "Membership applications must explicitly display Read-Only status");
+        assertFalse(html.contains("alert('Application"), "HTML must not contain fake alert buttons");
+    }
 }
