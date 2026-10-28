@@ -63,28 +63,42 @@
         
         .tab-bar {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             border-bottom: 2px solid #E2E8F0;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 8px;
         }
         .tab-btn {
-            background: none;
-            border: none;
+            background: #F1F5F9;
+            color: #475569;
+            border: 1px solid #CBD5E1;
+            border-radius: 8px;
             padding: 10px 18px;
             font-size: 14px;
             font-weight: 600;
-            color: #64748B;
             cursor: pointer;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
-            transition: all 0.2s ease;
+            transition: all 0.2s ease-in-out;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            outline: none;
+        }
+        .tab-btn:hover {
+            background: #E2E8F0;
+            color: #0F172A;
+            border-color: #94A3B8;
         }
         .tab-btn.active {
-            color: var(--blue-accent);
-            border-bottom-color: var(--blue-accent);
+            background: var(--blue-accent) !important;
+            color: #FFFFFF !important;
+            border-color: var(--blue-accent) !important;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35) !important;
+            font-weight: 700;
         }
         .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .tab-content.active { display: block !important; }
 
         .section-card {
             background: #FFFFFF;
@@ -193,17 +207,17 @@
                 <div class="kpi-value" id="kpi-name" style="font-size: 18px;">Prof. David Miller</div>
                 <div class="kpi-sub" id="kpi-dept">Computer Science & Engineering</div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" style="cursor: pointer;" onclick="switchTab('clubs')" title="Click to view Managed Clubs">
                 <div class="kpi-title">Managed Clubs</div>
                 <div class="kpi-value" id="kpi-clubs" style="color: var(--blue-accent);">1</div>
                 <div class="kpi-sub">Coding & Algorithms Club</div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" style="cursor: pointer;" onclick="switchTab('requests')" title="Click to view Membership Applications">
                 <div class="kpi-title">Pending Requests</div>
                 <div class="kpi-value" id="kpi-requests" style="color: var(--amber-warning);">4</div>
                 <div class="kpi-sub">Applications awaiting approval</div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" style="cursor: pointer;" onclick="switchTab('notices')" title="Click to view Club Notices">
                 <div class="kpi-title">Notices Broadcast</div>
                 <div class="kpi-value" id="kpi-notices" style="color: var(--emerald-green);">5</div>
                 <div class="kpi-sub">Published announcements</div>
@@ -212,16 +226,16 @@
 
         <!-- Navigation Tabs -->
         <div class="tab-bar">
-            <button class="tab-btn active" onclick="switchTab('all', this)">📋 All Overview</button>
-            <button class="tab-btn" onclick="switchTab('tab-clubs', this)">🏫 Managed Clubs</button>
-            <button class="tab-btn" onclick="switchTab('tab-requests', this)">📋 Membership Applications</button>
-            <button class="tab-btn" onclick="switchTab('tab-notices', this)">📢 Notices & Broadcasts</button>
-            <button class="tab-btn" onclick="switchTab('tab-events', this)">🗓️ Club Events</button>
+            <button class="tab-btn active" id="tab-all" data-tab="all" onclick="switchTab('all', this)">📋 All Overview</button>
+            <button class="tab-btn" id="tab-clubs" data-tab="clubs" onclick="switchTab('clubs', this)">🏫 Managed Clubs</button>
+            <button class="tab-btn" id="tab-notices" data-tab="notices" onclick="switchTab('notices', this)">📢 Notices & Broadcasts</button>
+            <button class="tab-btn" id="tab-requests" data-tab="requests" onclick="switchTab('requests', this)">📋 Membership Applications</button>
+            <button class="tab-btn" id="tab-events" data-tab="events" onclick="switchTab('events', this)">🗓️ Club Events</button>
             <span id="last-updated" class="status-toast" style="margin-left: auto; align-self: center;">● Live</span>
         </div>
 
-        <!-- Tab 1: Managed Clubs -->
-        <div id="tab-clubs" class="tab-content active section-card">
+        <!-- Section 1: Managed Clubs -->
+        <div id="tab-clubs" data-tab="clubs" class="tab-content active section-card">
             <h2>🏫 Supervised Clubs Overview</h2>
             <table>
                 <thead>
@@ -252,8 +266,40 @@
             </table>
         </div>
 
-        <!-- Tab 2: Membership Applications -->
-        <div id="tab-requests" class="tab-content section-card">
+        <!-- Section 2: Notices & Broadcasts -->
+        <div id="tab-notices" data-tab="notices" class="tab-content section-card">
+            <h2>📢 Club Notices & Announcements</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Club</th>
+                        <th>Notice Title</th>
+                        <th>Broadcast Details</th>
+                        <th>Priority</th>
+                        <th>Published Date</th>
+                    </tr>
+                </thead>
+                <tbody id="notices-tbody">
+                    <tr>
+                        <td><strong>Coding Club</strong></td>
+                        <td>Spring CodeSprint 2026 Orientation</td>
+                        <td>Mandatory briefing for all participants in Lab 402 this Friday.</td>
+                        <td><span class="pill pill-amber">HIGH</span></td>
+                        <td>2026-10-21 14:00</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Robotics Club</strong></td>
+                        <td>Line Follower Bot Kit Distribution</td>
+                        <td>Registered teams can pick up hardware kits from Innovation Cell.</td>
+                        <td><span class="pill pill-blue">MEDIUM</span></td>
+                        <td>2026-10-19 16:30</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 3: Membership Applications -->
+        <div id="tab-requests" data-tab="requests" class="tab-content section-card">
             <h2>📋 Pending Student Membership Requests</h2>
             <table>
                 <thead>
@@ -293,40 +339,8 @@
             </table>
         </div>
 
-        <!-- Tab 3: Notices & Broadcasts -->
-        <div id="tab-notices" class="tab-content section-card">
-            <h2>📢 Club Notices & Announcements</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Club</th>
-                        <th>Notice Title</th>
-                        <th>Broadcast Details</th>
-                        <th>Priority</th>
-                        <th>Published Date</th>
-                    </tr>
-                </thead>
-                <tbody id="notices-tbody">
-                    <tr>
-                        <td><strong>Coding Club</strong></td>
-                        <td>Spring CodeSprint 2026 Orientation</td>
-                        <td>Mandatory briefing for all participants in Lab 402 this Friday.</td>
-                        <td><span class="pill pill-amber">HIGH</span></td>
-                        <td>2026-10-21 14:00</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Robotics Club</strong></td>
-                        <td>Line Follower Bot Kit Distribution</td>
-                        <td>Registered teams can pick up hardware kits from Innovation Cell.</td>
-                        <td><span class="pill pill-blue">MEDIUM</span></td>
-                        <td>2026-10-19 16:30</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Tab 4: Events -->
-        <div id="tab-events" class="tab-content section-card">
+        <!-- Section 4: Events -->
+        <div id="tab-events" data-tab="events" class="tab-content section-card">
             <h2>🗓️ Scheduled Club Events & Capacities</h2>
             <table>
                 <thead>
@@ -359,19 +373,70 @@
     </div>
 
     <script>
-        function switchTab(tabId, btn) {
-            var tabs = document.querySelectorAll('.tab-content');
+        function switchTab(targetId, btn) {
+            var key = 'all';
+            if (targetId) {
+                var str = String(targetId).toLowerCase().replace(/^sec-/, '').replace(/^tab-/, '');
+                if (str === 'all' || str === '') key = 'all';
+                else if (str.indexOf('club') !== -1) key = 'clubs';
+                else if (str.indexOf('notice') !== -1 || str.indexOf('broadcast') !== -1 || str.indexOf('announce') !== -1) key = 'notices';
+                else if (str.indexOf('request') !== -1 || str.indexOf('member') !== -1 || str.indexOf('app') !== -1) key = 'requests';
+                else if (str.indexOf('event') !== -1) key = 'events';
+                else key = str;
+            }
+
             var buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(function(b) { b.classList.remove('active'); });
-            if (btn) btn.classList.add('active');
-            tabs.forEach(function(el) {
-                if (tabId === 'all' || el.id === tabId) {
-                    el.classList.add('active');
-                } else {
-                    el.classList.remove('active');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
+            if (btn && btn.classList) {
+                btn.classList.add('active');
+            } else {
+                for (var b = 0; b < buttons.length; b++) {
+                    var dTab = (buttons[b].getAttribute('data-tab') || buttons[b].id || '').toLowerCase();
+                    if ((key === 'all' && dTab.indexOf('all') !== -1) || (key !== 'all' && dTab.indexOf(key) !== -1)) {
+                        buttons[b].classList.add('active');
+                        break;
+                    }
                 }
-            });
+            }
+
+            var sections = document.querySelectorAll('.tab-content, .section-card');
+            var seen = [];
+            for (var j = 0; j < sections.length; j++) {
+                var sec = sections[j];
+                if (seen.indexOf(sec) !== -1) continue;
+                seen.push(sec);
+
+                var sId = (sec.id || '').toLowerCase();
+                var sData = (sec.getAttribute('data-tab') || '').toLowerCase();
+                var isMatch = (key === 'all') || (sId.indexOf(key) !== -1) || (sData.indexOf(key) !== -1);
+                if (isMatch) {
+                    sec.classList.remove('hidden');
+                    sec.classList.add('active');
+                    sec.style.setProperty('display', 'block', 'important');
+                } else {
+                    sec.classList.add('hidden');
+                    sec.classList.remove('active');
+                    sec.style.setProperty('display', 'none', 'important');
+                }
+            }
         }
+
+        function filterSections(targetId, btn) { switchTab(targetId, btn); }
+        window.switchTab = switchTab;
+        window.filterSections = switchTab;
+        window.switchDashboardTab = switchTab;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var tabBtns = document.querySelectorAll('.tab-btn');
+            for (var i = 0; i < tabBtns.length; i++) {
+                tabBtns[i].addEventListener('click', function(e) {
+                    var tgt = this.getAttribute('data-tab') || this.id.replace('tab-', '');
+                    switchTab(tgt, this);
+                });
+            }
+        });
 
         function refreshDashboardData() {
             var btn = document.getElementById('btn-refresh');
