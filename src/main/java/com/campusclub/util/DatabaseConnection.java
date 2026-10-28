@@ -2,6 +2,9 @@ package com.campusclub.util;
 
 import com.campusclub.exception.DatabaseOperationException;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -9,8 +12,8 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 /**
- * Utility class to manage JDBC Database Connections to MySQL 8.
- * Loads configuration from db.properties and provides connection lifecycle management.
+ * Utility class to manage JDBC Database Connections to MySQL 8 and TiDB Cloud Serverless.
+ * Loads configuration from environment variables, .env file, or db.properties.
  */
 public final class DatabaseConnection {
     private static String url;
@@ -37,7 +40,7 @@ public final class DatabaseConnection {
             System.err.println("Notice: Could not load db.properties: " + e.getMessage());
         }
 
-        // 1. Read from db.properties
+        // 1. Read defaults from db.properties
         url = properties.getProperty("db.url");
         if (url == null || url.trim().isEmpty()) {
             url = properties.getProperty("url");
@@ -58,30 +61,54 @@ public final class DatabaseConnection {
         if (password == null) {
             password = properties.getProperty("password");
         }
-        // 2. Environment variables override db.properties when provided
+
+        // 2. Read from git-ignored .env file if present
+        String envFileUrl = null;
+        String envFileUser = null;
+        String envFilePassword = null;
+        File envFile = new File(".env");
+        if (envFile.exists() && envFile.isFile()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(envFile))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (line.isEmpty() || line.startsWith("#")) continue;
+                    int idx = line.indexOf('=');
+                    if (idx > 0) {
+                        String k = line.substring(0, idx).trim();
+                        String v = line.substring(idx + 1).trim();
+                        if ((v.startsWith("\"") && v.endsWith("\"")) || (v.startsWith("'") && v.endsWith("'"))) {
+                            v = v.substring(1, v.length() - 1);
+                        }
+                        if ("CAMPUS_DB_URL".equalsIgnoreCase(k) || "DATABASE_URL".equalsIgnoreCase(k) || "MYSQL_URL".equalsIgnoreCase(k)) {
+                            envFileUrl = v;
+                        } else if ("CAMPUS_DB_USER".equalsIgnoreCase(k) || "DATABASE_USER".equalsIgnoreCase(k) || "MYSQL_USER".equalsIgnoreCase(k)) {
+                            envFileUser = v;
+                        } else if ("CAMPUS_DB_PASSWORD".equalsIgnoreCase(k) || "DATABASE_PASSWORD".equalsIgnoreCase(k) || "MYSQL_PASSWORD".equalsIgnoreCase(k)) {
+                            envFilePassword = v;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Notice: Could not read .env: " + e.getMessage());
+            }
+        }
+
+        // 3. System environment variables override .env and db.properties
         String envUrl = System.getenv("CAMPUS_DB_URL");
-        if (envUrl == null || envUrl.trim().isEmpty()) {
-            envUrl = System.getenv("DATABASE_URL");
-        }
-        if (envUrl == null || envUrl.trim().isEmpty()) {
-            envUrl = System.getenv("MYSQL_URL");
-        }
+        if (envUrl == null || envUrl.trim().isEmpty()) envUrl = System.getenv("DATABASE_URL");
+        if (envUrl == null || envUrl.trim().isEmpty()) envUrl = System.getenv("MYSQL_URL");
+        if (envUrl == null || envUrl.trim().isEmpty()) envUrl = envFileUrl;
 
         String envUser = System.getenv("CAMPUS_DB_USER");
-        if (envUser == null || envUser.trim().isEmpty()) {
-            envUser = System.getenv("DATABASE_USER");
-        }
-        if (envUser == null || envUser.trim().isEmpty()) {
-            envUser = System.getenv("MYSQL_USER");
-        }
+        if (envUser == null || envUser.trim().isEmpty()) envUser = System.getenv("DATABASE_USER");
+        if (envUser == null || envUser.trim().isEmpty()) envUser = System.getenv("MYSQL_USER");
+        if (envUser == null || envUser.trim().isEmpty()) envUser = envFileUser;
 
         String envPassword = System.getenv("CAMPUS_DB_PASSWORD");
-        if (envPassword == null) {
-            envPassword = System.getenv("DATABASE_PASSWORD");
-        }
-        if (envPassword == null) {
-            envPassword = System.getenv("MYSQL_PASSWORD");
-        }
+        if (envPassword == null) envPassword = System.getenv("DATABASE_PASSWORD");
+        if (envPassword == null) envPassword = System.getenv("MYSQL_PASSWORD");
+        if (envPassword == null) envPassword = envFilePassword;
 
         if (envUser != null && !envUser.trim().isEmpty()) {
             username = envUser.trim();
@@ -95,7 +122,7 @@ public final class DatabaseConnection {
             applyConnectionUrl(url.trim());
         }
 
-        // 3. Fallback defaults for local development
+        // 4. Fallback defaults for local development
         if (url == null || url.trim().isEmpty()) {
             url = "jdbc:mysql://localhost:3306/campus_club_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
         }
@@ -134,6 +161,25 @@ public final class DatabaseConnection {
         } else if (!clean.startsWith("jdbc:")) {
             clean = "jdbc:mysql://" + clean;
         }
+
+        // Normalize ssl-mode=REQUIRED to sslMode=VERIFY_IDENTITY for MySQL Connector/J
+        if (clean.contains("ssl-mode=REQUIRED")) {
+            clean = clean.replace("ssl-mode=REQUIRED", "sslMode=VERIFY_IDENTITY");
+        }
+
+        // Automatically optimize for TiDB Cloud Serverless endpoints
+        if (clean.contains("tidbcloud.com") || clean.contains(":4000")) {
+            if (!clean.contains("useSSL=") && !clean.contains("sslMode=")) {
+                clean += (clean.contains("?") ? "&" : "?") + "useSSL=true&sslMode=VERIFY_IDENTITY";
+            }
+            if (!clean.contains("enabledTLSProtocols=")) {
+                clean += (clean.contains("?") ? "&" : "?") + "enabledTLSProtocols=TLSv1.2,TLSv1.3";
+            }
+            if (!clean.contains("serverTimezone=")) {
+                clean += (clean.contains("?") ? "&" : "?") + "serverTimezone=UTC";
+            }
+        }
+
         url = clean;
     }
 
