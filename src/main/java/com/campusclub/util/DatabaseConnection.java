@@ -60,17 +60,39 @@ public final class DatabaseConnection {
         }
         // 2. Environment variables override db.properties when provided
         String envUrl = System.getenv("CAMPUS_DB_URL");
-        String envUser = System.getenv("CAMPUS_DB_USER");
-        String envPassword = System.getenv("CAMPUS_DB_PASSWORD");
-
-        if (envUrl != null && !envUrl.trim().isEmpty()) {
-            url = envUrl;
+        if (envUrl == null || envUrl.trim().isEmpty()) {
+            envUrl = System.getenv("DATABASE_URL");
         }
+        if (envUrl == null || envUrl.trim().isEmpty()) {
+            envUrl = System.getenv("MYSQL_URL");
+        }
+
+        String envUser = System.getenv("CAMPUS_DB_USER");
+        if (envUser == null || envUser.trim().isEmpty()) {
+            envUser = System.getenv("DATABASE_USER");
+        }
+        if (envUser == null || envUser.trim().isEmpty()) {
+            envUser = System.getenv("MYSQL_USER");
+        }
+
+        String envPassword = System.getenv("CAMPUS_DB_PASSWORD");
+        if (envPassword == null) {
+            envPassword = System.getenv("DATABASE_PASSWORD");
+        }
+        if (envPassword == null) {
+            envPassword = System.getenv("MYSQL_PASSWORD");
+        }
+
         if (envUser != null && !envUser.trim().isEmpty()) {
-            username = envUser;
+            username = envUser.trim();
         }
         if (envPassword != null) {
             password = envPassword;
+        }
+        if (envUrl != null && !envUrl.trim().isEmpty()) {
+            applyConnectionUrl(envUrl.trim());
+        } else if (url != null && !url.trim().isEmpty()) {
+            applyConnectionUrl(url.trim());
         }
 
         // 3. Fallback defaults for local development
@@ -83,7 +105,37 @@ public final class DatabaseConnection {
         if (password == null) {
             password = "MyCampus@2026";
         }
+    }
+
+    private static void applyConnectionUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.trim().isEmpty()) return;
+        String clean = rawUrl.trim();
+        if (clean.startsWith("mysql://")) {
+            try {
+                java.net.URI uri = java.net.URI.create(clean);
+                String userInfo = uri.getUserInfo();
+                if (userInfo != null && userInfo.contains(":")) {
+                    String[] parts = userInfo.split(":", 2);
+                    if (username == null || username.trim().isEmpty() || "root".equals(username)) {
+                        username = java.net.URLDecoder.decode(parts[0], java.nio.charset.StandardCharsets.UTF_8);
+                    }
+                    if (password == null || password.trim().isEmpty() || "MyCampus@2026".equals(password)) {
+                        password = java.net.URLDecoder.decode(parts[1], java.nio.charset.StandardCharsets.UTF_8);
+                    }
+                }
+                int port = uri.getPort() > 0 ? uri.getPort() : 3306;
+                String path = uri.getPath();
+                String query = uri.getQuery();
+                clean = "jdbc:mysql://" + uri.getHost() + ":" + port + (path != null ? path : "/campus_club_db") +
+                        (query != null && !query.isEmpty() ? "?" + query : "");
+            } catch (Exception ignored) {
+                clean = "jdbc:" + clean;
+            }
+        } else if (!clean.startsWith("jdbc:")) {
+            clean = "jdbc:mysql://" + clean;
         }
+        url = clean;
+    }
 
 
 
@@ -165,4 +217,25 @@ public final class DatabaseConnection {
             }
         }
     }
+
+    /**
+     * CLI entrypoint to verify database connection without revealing passwords.
+     */
+    public static void main(String[] args) {
+        System.out.println("--- Campus Club Database Connection Test ---");
+        String safeUrl = url != null ? url.replaceAll("(?i)password=[^&;]*", "password=***") : "null";
+        System.out.println("Target JDBC URL : " + safeUrl);
+        System.out.println("Target DB User  : " + username);
+        try (Connection conn = getConnection()) {
+            if (conn != null && !conn.isClosed()) {
+                System.out.println("[PASS] Successfully connected to database!");
+                System.out.println("Database Engine : " + conn.getMetaData().getDatabaseProductName() + " " + conn.getMetaData().getDatabaseProductVersion());
+            } else {
+                System.err.println("[FAIL] Connection is null or closed.");
+            }
+        } catch (Exception e) {
+            System.err.println("[FAIL] " + e.getMessage());
+        }
+    }
 }
+
