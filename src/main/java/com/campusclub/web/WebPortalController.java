@@ -1275,17 +1275,19 @@ public class WebPortalController implements HttpHandler {
     // =========================================================================
 
     private static void initFallbackData() {
-        // 5 Team Member Accounts + 1 Reviewer Account
-        addUser(1, "admin", "Team Lead (Admin)", "admin@campus.edu", "TeamLead@2026", UserRole.ADMIN);
-        addUser(1, "team_lead", "Team Lead (Project Admin)", "team.lead@campus.edu", "TeamLead@2026", UserRole.ADMIN);
-        addUser(2, "team_dev1", "Team Member 2 (Tech Lead)", "team.dev1@campus.edu", "TeamDev1@2026", UserRole.COORDINATOR);
-        addUser(2, "coord_coding", "David Miller", "coord.coding@campus.edu", "TeamDev1@2026", UserRole.COORDINATOR);
-        addUser(3, "team_dev2", "Team Member 3 (Events Lead)", "team.dev2@campus.edu", "TeamDev2@2026", UserRole.COORDINATOR);
-        addUser(3, "coord_robotics", "Elena Rostova", "coord.robotics@campus.edu", "TeamDev2@2026", UserRole.COORDINATOR);
-        addUser(4, "team_member4", "Team Member 4 (Member Coord)", "team.member4@campus.edu", "TeamMem4@2026", UserRole.COORDINATOR);
-        addUser(5, "team_member5", "Team Member 5 (QA & Operations)", "team.member5@campus.edu", "TeamMem5@2026", UserRole.COORDINATOR);
-        addUser(6, "teacher_reviewer", "Prof. Reviewer (External Evaluator)", "reviewer@campus.edu", "Reviewer@2026", UserRole.TEACHER);
-        addUser(6, "prof_sharma", "Prof. Rajesh Sharma", "sharma@campus.edu", "Reviewer@2026", UserRole.TEACHER);
+        // Desktop & Seed Demo Accounts (admin/admin123, coord_coding/pass123, prof_sharma/password123)
+        addUser(1, "admin", "System Administrator", "admin@campus.edu", "admin123", UserRole.ADMIN);
+        addUser(2, "coord_coding", "David Miller", "coord.coding@campus.edu", "pass123", UserRole.COORDINATOR);
+        addUser(3, "coord_robotics", "Elena Rostova", "coord.robotics@campus.edu", "pass123", UserRole.COORDINATOR);
+        addUser(4, "prof_sharma", "Prof. Rajesh Sharma", "sharma@campus.edu", "password123", UserRole.COORDINATOR);
+
+        // 5 Team Workspace Accounts + 1 Reviewer Account for Online Portal
+        addUser(17, "team_lead", "Team Lead (Project Admin)", "team.lead@campus.edu", "TeamLead@2026", UserRole.ADMIN);
+        addUser(18, "team_dev1", "Team Member 2 (Tech Lead)", "team.dev1@campus.edu", "TeamDev1@2026", UserRole.COORDINATOR);
+        addUser(19, "team_dev2", "Team Member 3 (Events Lead)", "team.dev2@campus.edu", "TeamDev2@2026", UserRole.COORDINATOR);
+        addUser(20, "team_member4", "Team Member 4 (Member Coord)", "team.member4@campus.edu", "TeamMem4@2026", UserRole.COORDINATOR);
+        addUser(21, "team_member5", "Team Member 5 (QA & Operations)", "team.member5@campus.edu", "TeamMem5@2026", UserRole.COORDINATOR);
+        addUser(22, "teacher_reviewer", "Prof. Reviewer (External Evaluator)", "reviewer@campus.edu", "Reviewer@2026", UserRole.TEACHER);
 
         // Seed Clubs
         addClub("1", "Coding & Algorithms Club", "Competitive programming, data structures, hackathons, and systems engineering.", "Technical", "David Miller", "ACTIVE", "64", "2021-08-15");

@@ -65,6 +65,8 @@ public class PreDemoFeatureAuditTest {
         clubService = new ClubService(clubDAO);
         membershipService = new MembershipService(membershipDAO, clubDAO);
         eventService = new EventService(eventDAO, eventRegistrationDAO, announcementDAO, clubDAO);
+
+        new com.campusclub.web.WebPortalController().ensureAccountsProvisionedInDatabase();
     }
 
     @BeforeEach

@@ -55,6 +55,8 @@ public class LiveDatabaseTest {
         membershipService = new MembershipService(membershipDAO, clubDAO);
         clubService = new ClubService(clubDAO);
         eventService = new EventService(eventDAO, eventRegistrationDAO, announcementDAO, clubDAO);
+
+        new com.campusclub.web.WebPortalController().ensureAccountsProvisionedInDatabase();
     }
 
     @BeforeEach

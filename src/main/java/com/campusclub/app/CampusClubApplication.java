@@ -34,12 +34,35 @@ public class CampusClubApplication {
             System.err.println("[CCMS] Notice: Could not start web route: " + e.getMessage());
         }
 
-        // Launch the Login UI on Event Dispatch Thread (EDT) only if display environment is present
+        // Launch Desktop GUI only if display environment is present
         if (!java.awt.GraphicsEnvironment.isHeadless()) {
-            SwingUtilities.invokeLater(() -> {
-                LoginFrame loginFrame = new LoginFrame();
-                loginFrame.setVisible(true);
-            });
+            boolean useSwing = false;
+            for (String arg : args) {
+                if ("--swing".equalsIgnoreCase(arg)) {
+                    useSwing = true;
+                    break;
+                }
+            }
+
+            if (useSwing) {
+                System.out.println("[CCMS] Launching Legacy Java Swing Desktop GUI (--swing flag detected)...");
+                SwingUtilities.invokeLater(() -> {
+                    LoginFrame loginFrame = new LoginFrame();
+                    loginFrame.setVisible(true);
+                });
+            } else {
+                System.out.println("[CCMS] Launching Modern JavaFX Desktop GUI (Default)...");
+                try {
+                    javafx.application.Application.launch(com.campusclub.javafx.CampusClubFxApp.class, args);
+                } catch (Throwable t) {
+                    System.err.println("[CCMS] JavaFX launch encountered error: " + t.getMessage());
+                    System.err.println("[CCMS] Falling back to Java Swing Desktop GUI...");
+                    SwingUtilities.invokeLater(() -> {
+                        LoginFrame loginFrame = new LoginFrame();
+                        loginFrame.setVisible(true);
+                    });
+                }
+            }
         } else {
             System.out.println("[CCMS] Headless environment detected: Running in standalone Web Server mode.");
             // Keep container process alive in cloud deployment (e.g. Render/Docker)
