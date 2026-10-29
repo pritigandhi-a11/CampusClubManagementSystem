@@ -164,7 +164,13 @@ INSERT IGNORE INTO users (user_id, username, full_name, email, password_hash, ro
 (13, 'coord_coding', 'David Miller', 'coord.coding@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543230'),
 (14, 'coord_robotics', 'Elena Rostova', 'coord.robotics@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543231'),
 (15, 'student1', 'Alex Turner', 'student1@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'STUDENT', '9876543232'),
-(16, 'student2', 'Sophia Chen', 'student2@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'STUDENT', '9876543233');
+(16, 'student2', 'Sophia Chen', 'student2@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'STUDENT', '9876543233'),
+(17, 'team_lead', 'Team Lead (Project Admin)', 'team.lead@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'ADMIN', '9876543240'),
+(18, 'team_dev1', 'Team Member 2 (Tech Lead)', 'team.dev1@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543241'),
+(19, 'team_dev2', 'Team Member 3 (Events Lead)', 'team.dev2@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543242'),
+(20, 'team_member4', 'Team Member 4 (Member Coord)', 'team.member4@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543243'),
+(21, 'team_member5', 'Team Member 5 (QA & Operations)', 'team.member5@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543244'),
+(22, 'teacher_reviewer', 'Prof. Reviewer (External Evaluator)', 'reviewer@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543245');
 
 -- 2. STUDENTS (10 Students)
 INSERT IGNORE INTO students (student_id, user_id, register_number, department, year, semester, phone, interests) VALUES

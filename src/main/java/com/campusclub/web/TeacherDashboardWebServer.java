@@ -67,19 +67,31 @@ public final class TeacherDashboardWebServer {
                 throw new IllegalStateException("Could not bind HTTP server to ports " + initialPort + "-" + (initialPort + 9));
             }
 
-            TeacherDashboardController controller = new TeacherDashboardController();
+            TeacherDashboardController teacherController = new TeacherDashboardController();
+            WebPortalController portalController = new WebPortalController();
 
-            // 1. Primary Explicit Routes
-            server.createContext("/teacherDashboard", controller);
-            server.createContext("/teacher-dashboard", controller);
-            server.createContext("/api/teacherDashboard", controller);
-            server.createContext("/teacherDashboard.jsp", controller);
-            server.createContext("/teacherDashboard.html", controller);
+            // 1. Existing Teacher Dashboard Routes (100% backward compatible)
+            server.createContext("/teacherDashboard", teacherController);
+            server.createContext("/teacher-dashboard", teacherController);
+            server.createContext("/api/teacherDashboard", teacherController);
+            server.createContext("/teacherDashboard.jsp", teacherController);
+            server.createContext("/teacherDashboard.html", teacherController);
+            server.createContext("/teacherdashboard", teacherController);
+            server.createContext("/TeacherDashboard", teacherController);
 
-            // 2. Case Variations & Route Aliases
-            server.createContext("/teacherdashboard", controller);
-            server.createContext("/TeacherDashboard", controller);
-            server.createContext("/dashboard", controller);
+            // 2. Multi-User Web Portal & Authentication Routes
+            server.createContext("/login", portalController);
+            server.createContext("/portal", portalController);
+            server.createContext("/adminPortal", portalController);
+            server.createContext("/api/auth", portalController);
+            server.createContext("/api/clubs", portalController);
+            server.createContext("/api/events", portalController);
+            server.createContext("/api/announcements", portalController);
+            server.createContext("/api/memberships", portalController);
+            server.createContext("/api/team", portalController);
+            server.createContext("/api/db-status", portalController);
+
+            // 3. Health check
             server.createContext("/healthz", exchange -> {
                 byte[] response = "{\"status\":\"UP\"}".getBytes(StandardCharsets.UTF_8);
                 exchange.getResponseHeaders().set("Content-Type", "application/json");
@@ -89,28 +101,34 @@ public final class TeacherDashboardWebServer {
                 }
             });
 
-            // 3. Root Context ("/") Handler: Catches root URL and prevents 404s
+            // 4. Root Context ("/") Handler
             server.createContext("/", exchange -> {
                 String path = exchange.getRequestURI().getPath();
+                String query = exchange.getRequestURI().getQuery();
+                if (query != null && query.toLowerCase().contains("format=json")) {
+                    teacherController.handle(exchange);
+                    return;
+                }
                 if (path == null || path.isEmpty() || path.equals("/") ||
                     path.equalsIgnoreCase("/index.html") ||
-                    path.equalsIgnoreCase("/index.jsp") ||
-                    path.toLowerCase().startsWith("/teacherdashboard") ||
-                    path.toLowerCase().startsWith("/teacher-dashboard") ||
-                    path.toLowerCase().startsWith("/dashboard") ||
-                    path.equalsIgnoreCase("/health")) {
-                    controller.handle(exchange);
+                    path.equalsIgnoreCase("/index.jsp")) {
+                    portalController.handle(exchange);
+                } else if (path.toLowerCase().startsWith("/teacher")) {
+                    teacherController.handle(exchange);
+                } else if (path.toLowerCase().startsWith("/api/") ||
+                           path.toLowerCase().startsWith("/login") ||
+                           path.toLowerCase().startsWith("/portal") ||
+                           path.toLowerCase().startsWith("/dashboard")) {
+                    portalController.handle(exchange);
                 } else if (path.startsWith("/webapp")) {
-                    new WebAppFileHandler(controller).handle(exchange);
+                    new WebAppFileHandler(teacherController).handle(exchange);
                 } else {
-                    exchange.getResponseHeaders().set("Location", "/teacherDashboard");
-                    exchange.sendResponseHeaders(302, -1);
-                    exchange.close();
+                    portalController.handle(exchange);
                 }
             });
 
-            // 4. Static / JSP WebApp View Handler: /webapp/
-            server.createContext("/webapp", new WebAppFileHandler(controller));
+            // 5. Static / JSP WebApp View Handler: /webapp/
+            server.createContext("/webapp", new WebAppFileHandler(teacherController));
 
             server.setExecutor(Executors.newCachedThreadPool());
             server.start();

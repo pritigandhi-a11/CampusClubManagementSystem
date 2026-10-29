@@ -31,8 +31,16 @@ public enum UserRole {
         if (roleStr.equalsIgnoreCase("FACULTY")
                 || roleStr.equalsIgnoreCase("TEACHER_COORDINATOR")
                 || roleStr.equalsIgnoreCase("TEACHER COORDINATOR")
-                || roleStr.equalsIgnoreCase("TEACHER")) {
+                || roleStr.equalsIgnoreCase("TEACHER")
+                || roleStr.equalsIgnoreCase("REVIEWER")
+                || roleStr.equalsIgnoreCase("EVALUATOR")
+                || roleStr.equalsIgnoreCase("AUDITOR")) {
             return TEACHER;
+        }
+        if (roleStr.equalsIgnoreCase("TEAM_MEMBER")
+                || roleStr.equalsIgnoreCase("TEAM MEMBER")
+                || roleStr.equalsIgnoreCase("MEMBER_COORDINATOR")) {
+            return COORDINATOR;
         }
         throw new IllegalArgumentException("Unknown user role: " + roleStr);
     }
