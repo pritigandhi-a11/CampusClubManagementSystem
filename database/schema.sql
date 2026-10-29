@@ -165,12 +165,12 @@ INSERT IGNORE INTO users (user_id, username, full_name, email, password_hash, ro
 (14, 'coord_robotics', 'Elena Rostova', 'coord.robotics@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543231'),
 (15, 'student1', 'Alex Turner', 'student1@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'STUDENT', '9876543232'),
 (16, 'student2', 'Sophia Chen', 'student2@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'STUDENT', '9876543233'),
-(17, 'team_lead', 'Team Lead (Project Admin)', 'team.lead@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'ADMIN', '9876543240'),
-(18, 'team_dev1', 'Team Member 2 (Tech Lead)', 'team.dev1@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543241'),
-(19, 'team_dev2', 'Team Member 3 (Events Lead)', 'team.dev2@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543242'),
-(20, 'team_member4', 'Team Member 4 (Member Coord)', 'team.member4@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543243'),
-(21, 'team_member5', 'Team Member 5 (QA & Operations)', 'team.member5@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543244'),
-(22, 'teacher_reviewer', 'Prof. Reviewer (External Evaluator)', 'reviewer@campus.edu', '9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c', 'COORDINATOR', '9876543245');
+(17, 'team_lead', 'Team Lead (Project Admin)', 'team.lead@campus.edu', '325352afb95dfe4d7b9bd8567de1de2970f79ccc7b27654f13f01f4f49d55a27', 'ADMIN', '9876543240'),
+(18, 'team_dev1', 'Team Member 2 (Tech Lead)', 'team.dev1@campus.edu', '470d3dedaf9b5dd6db5720d5941100033a420af6bd97e1a8da351bd7780b79d1', 'COORDINATOR', '9876543241'),
+(19, 'team_dev2', 'Team Member 3 (Events Lead)', 'team.dev2@campus.edu', '0273d6fd2b477b37a29a7cbd89038c4a96a071985e723794850e157c96c506ed', 'COORDINATOR', '9876543242'),
+(20, 'team_member4', 'Team Member 4 (Member Coord)', 'team.member4@campus.edu', 'a02d1d42f01b86eb30c8cf877238e87448cb24f66e7eb39b7b7f5ea1c97115cc', 'COORDINATOR', '9876543243'),
+(21, 'team_member5', 'Team Member 5 (QA & Operations)', 'team.member5@campus.edu', 'b93bcb7c8f45647cefc73365b45afddbcda7ba5e169bac794853bc61bf3be2c9', 'COORDINATOR', '9876543244'),
+(22, 'teacher_reviewer', 'Prof. Reviewer (External Evaluator)', 'reviewer@campus.edu', 'eea7ea40fb4d375472281e92a3f551c6a74bbac387cec1e1d9e8fe07843f236b', 'COORDINATOR', '9876543245');
 
 -- 2. STUDENTS (10 Students)
 INSERT IGNORE INTO students (student_id, user_id, register_number, department, year, semester, phone, interests) VALUES
