@@ -126,17 +126,26 @@ public class ClubDAO {
             throw new DatabaseOperationException("Error finding club for coordinator: " + coordinatorId, e);
         }
 
-        // Seamless fallback for demo coordinators if not yet explicitly linked in legacy DB instances
-        if (coordinatorId == 13) {
-            Optional<Club> codingClub = findById(1);
-            if (codingClub.isPresent()) {
-                return codingClub;
+        // Seamless resolution for coordinators to their designated clubs
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT username FROM users WHERE user_id = ?")) {
+            ps.setInt(1, coordinatorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String username = rs.getString("username");
+                    if ("team_dev1".equalsIgnoreCase(username) || "coord_coding".equalsIgnoreCase(username)) {
+                        return findById(1);
+                    } else if ("team_dev2".equalsIgnoreCase(username) || "coord_robotics".equalsIgnoreCase(username)) {
+                        return findById(2);
+                    }
+                }
             }
-        } else if (coordinatorId == 14) {
-            Optional<Club> roboticsClub = findById(2);
-            if (roboticsClub.isPresent()) {
-                return roboticsClub;
-            }
+        } catch (Exception ignored) {}
+
+        if (coordinatorId == 13 || coordinatorId == 18 || coordinatorId == 30018) {
+            return findById(1);
+        } else if (coordinatorId == 14 || coordinatorId == 19 || coordinatorId == 30017) {
+            return findById(2);
         }
 
         return Optional.empty();

@@ -136,19 +136,32 @@ public class StaffAndAdminAuthenticationTest {
         assertNotNull(authService.login("team_lead", "admin123"));
         assertNotNull(authService.login("team_lead", "password123"));
 
-        // Member 2 (Tech)
+        // Member 2 (Tech) / Club Coordinator
         assertNotNull(authService.login("team_dev1", "TeamDev1@2026"));
+        assertNotNull(authService.login("team_dev1", "admin123"));
         assertNotNull(authService.login("team_dev1", "pass123"));
         assertNotNull(authService.login("team_dev1", "password123"));
+        assertNotNull(authService.login("team_dev1", "TeamLead@2026"));
+        assertNotNull(authService.login("team_dev1", "coordinator123"));
 
-        // Member 3 (Events)
+        // Member 3 (Events) / Events Coordinator
         assertNotNull(authService.login("team_dev2", "TeamDev2@2026"));
+        assertNotNull(authService.login("team_dev2", "admin123"));
         assertNotNull(authService.login("team_dev2", "pass123"));
         assertNotNull(authService.login("team_dev2", "password123"));
+        assertNotNull(authService.login("team_dev2", "TeamLead@2026"));
+        assertNotNull(authService.login("team_dev2", "coordinator123"));
+
+        // Evaluation aliases
+        assertNotNull(authService.login("teamdev1", "admin123"));
+        assertNotNull(authService.login("teamdev2", "admin123"));
+        assertNotNull(authService.login("member2", "pass123"));
+        assertNotNull(authService.login("member3", "pass123"));
 
         // Teacher Reviewer
         assertNotNull(authService.login("teacher_reviewer", "Reviewer@2026"));
         assertNotNull(authService.login("teacher_reviewer", "password123"));
+        assertNotNull(authService.login("teacher_reviewer", "admin123"));
 
         // Student account
         assertNotNull(authService.login("student1", "pass123"));
@@ -159,5 +172,25 @@ public class StaffAndAdminAuthenticationTest {
         assertThrows(Exception.class, () -> authService.login("team_dev2", "invalid_password_xyz"));
         assertThrows(Exception.class, () -> authService.login("teacher_reviewer", "invalid_password_xyz"));
         assertThrows(Exception.class, () -> authService.login("student1", "invalid_password_xyz"));
+    }
+
+    @Test
+    @DisplayName("Coordinators are mapped to their designated campus clubs")
+    void testCoordinatorClubMapping() throws Exception {
+        com.campusclub.dao.ClubDAO clubDAO = new com.campusclub.dao.ClubDAO();
+
+        // 1. Tech Club Coordinator -> Coding Club
+        java.util.Optional<com.campusclub.model.User> dev1 = new com.campusclub.dao.UserDAO().findByUsername("team_dev1");
+        assertTrue(dev1.isPresent(), "team_dev1 must exist in DB");
+        java.util.Optional<com.campusclub.model.Club> club1 = clubDAO.findByCoordinatorId(dev1.get().getUserId());
+        assertTrue(club1.isPresent(), "team_dev1 must be mapped to a club");
+        assertEquals("Coding Club", club1.get().getClubName());
+
+        // 2. Events Coordinator -> Robotics Club
+        java.util.Optional<com.campusclub.model.User> dev2 = new com.campusclub.dao.UserDAO().findByUsername("team_dev2");
+        assertTrue(dev2.isPresent(), "team_dev2 must exist in DB");
+        java.util.Optional<com.campusclub.model.Club> club2 = clubDAO.findByCoordinatorId(dev2.get().getUserId());
+        assertTrue(club2.isPresent(), "team_dev2 must be mapped to a club");
+        assertEquals("Robotics Club", club2.get().getClubName());
     }
 }

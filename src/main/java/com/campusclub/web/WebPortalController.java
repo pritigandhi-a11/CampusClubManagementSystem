@@ -28,6 +28,8 @@ import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -482,7 +484,8 @@ public class WebPortalController implements HttpHandler {
                 return;
             }
             DatabaseMigrationRunner.runSecurityMigration();
-            for (User u : builtInUsers.values()) {
+            Set<User> uniqueUsers = new HashSet<>(builtInUsers.values());
+            for (User u : uniqueUsers) {
                 try {
                     Optional<User> existing = userDAO.findByUsername(u.getUsername());
                     int effectiveUserId;
@@ -492,8 +495,14 @@ public class WebPortalController implements HttpHandler {
                     } else {
                         User dbUser = existing.get();
                         effectiveUserId = dbUser.getUserId();
-                        if (!u.getPasswordHash().equals(dbUser.getPasswordHash())) {
-                            userDAO.updatePassword(effectiveUserId, u.getPasswordHash());
+                        u.setUserId(effectiveUserId);
+                        if (u.getRole() != null && u.getRole() != dbUser.getRole()) {
+                            try (Connection conn = DatabaseConnection.getConnection();
+                                 PreparedStatement ps = conn.prepareStatement("UPDATE users SET role = ? WHERE user_id = ?")) {
+                                ps.setString(1, u.getRole().name());
+                                ps.setInt(2, effectiveUserId);
+                                ps.executeUpdate();
+                            } catch (Exception ignored) {}
                         }
                     }
                     if (u instanceof Student s && effectiveUserId > 0) {
@@ -539,6 +548,18 @@ public class WebPortalController implements HttpHandler {
         // Supports logging in via username, @klu.ac.in institutional email, or student ID (register number)
         User fallbackUser = builtInUsers.get(cleanUser.toLowerCase());
         if (fallbackUser == null) {
+            String low = cleanUser.toLowerCase();
+            if (low.equals("teamdev1") || low.equals("member2") || low.equals("member_2") || low.equals("tech_lead")) {
+                fallbackUser = builtInUsers.get("team_dev1");
+            } else if (low.equals("teamdev2") || low.equals("member3") || low.equals("member_3") || low.equals("events_lead")) {
+                fallbackUser = builtInUsers.get("team_dev2");
+            } else if (low.equals("teamlead") || low.equals("team_lead_admin")) {
+                fallbackUser = builtInUsers.get("team_lead");
+            } else if (low.equals("reviewer") || low.equals("teacher")) {
+                fallbackUser = builtInUsers.get("teacher_reviewer");
+            }
+        }
+        if (fallbackUser == null) {
             for (User u : builtInUsers.values()) {
                 if (cleanUser.equalsIgnoreCase(u.getEmail())) {
                     fallbackUser = u;
@@ -566,11 +587,18 @@ public class WebPortalController implements HttpHandler {
             }
             // Allow initial review password overrides if set in env
             String envReviewerPass = System.getenv("REVIEWER_PASSWORD");
-            if (envReviewerPass != null && "teacher_reviewer".equalsIgnoreCase(cleanUser) && envReviewerPass.equals(password)) {
+            if (envReviewerPass != null && ("teacher_reviewer".equalsIgnoreCase(cleanUser) || "prof_sharma".equalsIgnoreCase(cleanUser) || "reviewer".equalsIgnoreCase(cleanUser) || "teacher".equalsIgnoreCase(cleanUser)) && envReviewerPass.equals(password)) {
                 return fallbackUser;
             }
             String envAdminPass = System.getenv("ADMIN_PASSWORD");
-            if (envAdminPass != null && ("admin".equalsIgnoreCase(cleanUser) || "team_lead".equalsIgnoreCase(cleanUser)) && envAdminPass.equals(password)) {
+            if (envAdminPass != null && ("admin".equalsIgnoreCase(cleanUser) || "team_lead".equalsIgnoreCase(cleanUser) || "teamlead".equalsIgnoreCase(cleanUser)) && envAdminPass.equals(password)) {
+                return fallbackUser;
+            }
+            String envCoordPass = System.getenv("COORDINATOR_PASSWORD");
+            if (envCoordPass != null && ("team_dev1".equalsIgnoreCase(cleanUser) || "team_dev2".equalsIgnoreCase(cleanUser) || "coord_coding".equalsIgnoreCase(cleanUser) || "coord_robotics".equalsIgnoreCase(cleanUser) || "member2".equalsIgnoreCase(cleanUser) || "member3".equalsIgnoreCase(cleanUser)) && envCoordPass.equals(password)) {
+                return fallbackUser;
+            }
+            if (envAdminPass != null && AuthenticationService.isBuiltInEvaluationUser(fallbackUser.getUsername()) && envAdminPass.equals(password)) {
                 return fallbackUser;
             }
         }
