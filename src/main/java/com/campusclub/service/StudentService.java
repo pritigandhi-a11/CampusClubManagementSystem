@@ -57,6 +57,12 @@ public class StudentService {
         ValidationUtil.validateRequired(student.getRegisterNumber(), "Register Number");
         ValidationUtil.validatePassword(plainPassword);
 
+        // Security requirement: Institutional email verification for Kalasalingam University (@klu.ac.in)
+        ValidationUtil.validateInstitutionalEmail(student.getEmail());
+
+        // Security requirement: Backend role enforcement - users cannot self-assign privileged roles
+        student.setRole(com.campusclub.model.UserRole.STUDENT);
+
         // Hash password before persistence
         student.setPasswordHash(PasswordUtil.hashPassword(plainPassword));
         return studentDAO.createStudent(student);

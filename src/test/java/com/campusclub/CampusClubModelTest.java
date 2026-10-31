@@ -34,7 +34,7 @@ public class CampusClubModelTest {
     }
 
     @Test
-    @DisplayName("Test PBKDF2 Salted Password Hashing and Salt Uniqueness")
+    @DisplayName("Test Modern Salted Password Hashing (BCrypt & PBKDF2) and Salt Uniqueness")
     void testSaltedPasswordHashing() {
         String rawPassword = "mypassword2026";
         String hash1 = PasswordUtil.hashPassword(rawPassword);
@@ -42,7 +42,7 @@ public class CampusClubModelTest {
 
         assertNotNull(hash1);
         assertNotNull(hash2);
-        assertTrue(hash1.startsWith("PBKDF2$"));
+        assertTrue(hash1.startsWith("$2a$") || hash1.startsWith("PBKDF2$"));
         // Different random salts produce different hashes for same password
         assertNotEquals(hash1, hash2);
 
@@ -50,6 +50,11 @@ public class CampusClubModelTest {
         assertTrue(PasswordUtil.verifyPassword(rawPassword, hash1));
         assertTrue(PasswordUtil.verifyPassword(rawPassword, hash2));
         assertFalse(PasswordUtil.verifyPassword("wrongpassword", hash1));
+
+        // Also test backward-compatible PBKDF2 hashing
+        String pbkdf2Hash = PasswordUtil.hashPasswordPbkdf2(rawPassword);
+        assertTrue(pbkdf2Hash.startsWith("PBKDF2$"));
+        assertTrue(PasswordUtil.verifyPassword(rawPassword, pbkdf2Hash));
     }
 
     @Test

@@ -156,6 +156,39 @@ public class StudentDAO {
         }
     }
 
+    /**
+     * Ensures that a student profile record exists in the students table for an existing user_id.
+     * Prevents foreign key and duplicate key violations while ensuring relational consistency.
+     */
+    public boolean ensureStudentRecordExists(int userId, String registerNumber, String department, int year, int semester, String phone, String interests) {
+        if (userId <= 0) return false;
+        String checkSql = "SELECT student_id FROM students WHERE user_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement psCheck = conn.prepareStatement(checkSql)) {
+            psCheck.setInt(1, userId);
+            try (ResultSet rs = psCheck.executeQuery()) {
+                if (rs.next()) {
+                    return true;
+                }
+            }
+
+            String regNo = (registerNumber != null && !registerNumber.trim().isEmpty()) ? registerNumber.trim() : ("REG" + userId);
+            String insertSql = "INSERT INTO students (user_id, register_number, department, year, semester, phone, interests) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                ps.setInt(1, userId);
+                ps.setString(2, regNo);
+                ps.setString(3, department != null ? department : "Computer Science & Engineering");
+                ps.setInt(4, year > 0 ? year : 1);
+                ps.setInt(5, semester > 0 ? semester : 1);
+                ps.setString(6, phone != null ? phone : "+91 9952780039");
+                ps.setString(7, interests != null ? interests : "Coding");
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
     public boolean updateStudent(Student student) throws DatabaseOperationException {
         String sql = "UPDATE students SET register_number = ?, department = ?, year = ?, semester = ?, phone = ?, interests = ? " +
                      "WHERE student_id = ? OR user_id = ?";

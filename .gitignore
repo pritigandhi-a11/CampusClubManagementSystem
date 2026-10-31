@@ -5,4 +5,6 @@ tools/cloudflared.exe
 src/main/resources/application.properties
 src/main/resources/db.properties
 database/*_backup.sql
+database/*backup*.sql
+*.sql.bak
 *.bak

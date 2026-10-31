@@ -21,6 +21,15 @@ public class CampusClubFxApp extends Application {
 
     @Override
     public void start(Stage stage) {
+        // Pre-initialize and synchronize institutional accounts in database in a background thread
+        new Thread(() -> {
+            try {
+                new com.campusclub.web.WebPortalController().ensureAccountsProvisionedInDatabase();
+            } catch (Throwable ignored) {
+                // Non-blocking: background provisioning attempt
+            }
+        }, "ccms-fx-provision").start();
+
         this.primaryStage = stage;
         this.primaryStage.setTitle("Campus Club Management System — JavaFX Desktop Portal");
         this.primaryStage.setMinWidth(960);

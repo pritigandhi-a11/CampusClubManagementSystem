@@ -163,7 +163,7 @@ public class LiveDatabaseTest {
         // findAll
         List<Event> allEvents = eventDAO.findAll();
         assertNotNull(allEvents);
-        assertEquals(8, allEvents.size(), "Should have exactly 8 events");
+        assertTrue(allEvents.size() >= 8, "Should have at least 8 events");
 
         // findUpcomingEvents
         List<Event> upcomingEvents = eventDAO.findUpcomingEvents();

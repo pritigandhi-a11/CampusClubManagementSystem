@@ -1,5 +1,7 @@
 package com.campusclub.util;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -10,8 +12,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 
 /**
- * Secure Password Utility implementing PBKDF2 with HMAC-SHA256 and salted hashing.
- * Provides backwards-compatibility for existing SHA-256 demo hashes while securing newly stored passwords.
+ * Secure Password Utility implementing BCrypt (work factor 12) with backward-compatible
+ * verification for salted PBKDF2 with HMAC-SHA256 and legacy demo SHA-256 hashes.
  */
 public final class PasswordUtil {
 
@@ -19,6 +21,7 @@ public final class PasswordUtil {
     private static final int ITERATIONS = 10000;
     private static final int KEY_LENGTH = 256;
     private static final int SALT_LENGTH = 16;
+    private static final int BCRYPT_LOG_ROUNDS = 12;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private PasswordUtil() {
@@ -26,13 +29,27 @@ public final class PasswordUtil {
     }
 
     /**
+     * Hashes a raw password string using BCrypt with work factor 12.
+     * Output format: "$2a$12$..."
+     *
+     * @param password raw plain text password
+     * @return formatted BCrypt hash string
+     */
+    public static String hashPassword(String password) {
+        if (password == null) {
+            throw new IllegalArgumentException("Password cannot be null");
+        }
+        return BCrypt.hashpw(password, BCrypt.gensalt(BCRYPT_LOG_ROUNDS));
+    }
+
+    /**
      * Hashes a raw password string using PBKDF2WithHmacSHA256 and a random cryptographic salt.
      * Output format: "PBKDF2$iterations$saltHex$hashHex"
      *
      * @param password raw plain text password
-     * @return formatted salted hash string
+     * @return formatted salted PBKDF2 hash string
      */
-    public static String hashPassword(String password) {
+    public static String hashPasswordPbkdf2(String password) {
         if (password == null) {
             throw new IllegalArgumentException("Password cannot be null");
         }
@@ -46,7 +63,7 @@ public final class PasswordUtil {
 
     /**
      * Verifies a plain text password against a stored hash string.
-     * Supports both PBKDF2 salted hashes and legacy demo SHA-256 hashes.
+     * Supports BCrypt ($2a$, $2b$, $2y$), PBKDF2 salted hashes, and legacy demo SHA-256 hashes.
      *
      * @param plainPassword plain text password to check
      * @param storedHash    the stored hash
@@ -57,7 +74,16 @@ public final class PasswordUtil {
             return false;
         }
 
-        // 1. Check if storedHash is in PBKDF2 format: PBKDF2$<iterations>$<salt>$<hash>
+        // 1. Check if storedHash is in BCrypt format: $2a$, $2b$, or $2y$
+        if (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$") || storedHash.startsWith("$2y$")) {
+            try {
+                return BCrypt.checkpw(plainPassword, storedHash);
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        // 2. Check if storedHash is in PBKDF2 format: PBKDF2$<iterations>$<salt>$<hash>
         if (storedHash.startsWith("PBKDF2$")) {
             String[] parts = storedHash.split("\\$");
             if (parts.length == 4) {
@@ -74,7 +100,7 @@ public final class PasswordUtil {
             }
         }
 
-        // 2. Legacy / Standard SHA-256 Verification (supports initial seed data)
+        // 3. Legacy / Standard SHA-256 Verification (supports initial seed data)
         try {
             MessageDigest shaDigest = MessageDigest.getInstance("SHA-256");
             byte[] calculatedShaBytes = shaDigest.digest(plainPassword.getBytes(StandardCharsets.UTF_8));

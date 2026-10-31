@@ -47,6 +47,20 @@
             <version>${mysql.connector.version}</version>
         </dependency>
 
+        <!-- BCrypt Password Hashing -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.4</version>
+        </dependency>
+
+        <!-- JavaMail API for SMTP Email Delivery -->
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>1.6.2</version>
+        </dependency>
+
         <!-- JUnit 5 Testing Framework -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

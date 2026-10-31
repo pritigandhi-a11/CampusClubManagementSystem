@@ -23,6 +23,9 @@ public final class ValidationUtil {
     private static final Pattern REGISTER_NUMBER_PATTERN =
             Pattern.compile("^[a-zA-Z0-9_-]{3,30}$");
 
+    private static final Pattern INSTITUTIONAL_EMAIL_PATTERN =
+            Pattern.compile("^[a-zA-Z0-9._%+-]+@klu\\.ac\\.in$", Pattern.CASE_INSENSITIVE);
+
     private ValidationUtil() {
         // Utility class - non-instantiable
     }
@@ -66,6 +69,19 @@ public final class ValidationUtil {
             return false;
         }
         return REGISTER_NUMBER_PATTERN.matcher(regNo.trim()).matches();
+    }
+
+    public static boolean isValidInstitutionalEmail(String email) {
+        if (isNullOrEmpty(email)) {
+            return false;
+        }
+        return INSTITUTIONAL_EMAIL_PATTERN.matcher(email.trim()).matches();
+    }
+
+    public static void validateInstitutionalEmail(String email) {
+        if (!isValidInstitutionalEmail(email)) {
+            throw new IllegalArgumentException("Registration requires an official institutional email ending exactly in @klu.ac.in (e.g. 99527800392@klu.ac.in).");
+        }
     }
 
     public static boolean isPositiveInteger(String str) {

@@ -21,6 +21,11 @@ public abstract class User {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean active = true;
+    private boolean verified = true;
+    private String verificationCode;
+    private Long otpExpiresAt;
+    private int otpAttempts = 0;
+    private Long lastOtpSentAt;
 
     public User() {
         this.createdAt = LocalDateTime.now();
@@ -140,6 +145,46 @@ public abstract class User {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
+
+    public Long getOtpExpiresAt() {
+        return otpExpiresAt;
+    }
+
+    public void setOtpExpiresAt(Long otpExpiresAt) {
+        this.otpExpiresAt = otpExpiresAt;
+    }
+
+    public int getOtpAttempts() {
+        return otpAttempts;
+    }
+
+    public void setOtpAttempts(int otpAttempts) {
+        this.otpAttempts = otpAttempts;
+    }
+
+    public Long getLastOtpSentAt() {
+        return lastOtpSentAt;
+    }
+
+    public void setLastOtpSentAt(Long lastOtpSentAt) {
+        this.lastOtpSentAt = lastOtpSentAt;
     }
 
     public String getPhoneNumber() {

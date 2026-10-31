@@ -66,8 +66,8 @@ public final class DatabaseConnection {
         String envFileUrl = null;
         String envFileUser = null;
         String envFilePassword = null;
-        File envFile = new File(".env");
-        if (envFile.exists() && envFile.isFile()) {
+        File envFile = resolveEnvFile();
+        if (envFile != null && envFile.exists() && envFile.isFile()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(envFile))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -180,6 +180,10 @@ public final class DatabaseConnection {
             }
         }
 
+        if (!clean.contains("connectTimeout=")) {
+            clean += (clean.contains("?") ? "&" : "?") + "connectTimeout=3000&socketTimeout=5000";
+        }
+
         url = clean;
     }
 
@@ -240,6 +244,24 @@ public final class DatabaseConnection {
             System.err.println("JDBC Connection Check: " + e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Resolves the .env file across project directories and current working directory.
+     */
+    private static File resolveEnvFile() {
+        File[] candidates = new File[] {
+            new File(".env"),
+            new File(System.getProperty("user.dir", "."), ".env"),
+            new File("c:/Users/Preeti gandhi/Desktop/CampusClubManagementSystem/.env"),
+            new File(System.getProperty("user.home", ""), "Desktop/CampusClubManagementSystem/.env")
+        };
+        for (File candidate : candidates) {
+            if (candidate.exists() && candidate.isFile()) {
+                return candidate;
+            }
+        }
+        return null;
     }
 
     /**

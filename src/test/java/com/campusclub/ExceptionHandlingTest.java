@@ -373,6 +373,26 @@ public class ExceptionHandlingTest {
         }
 
         @Test
+        @DisplayName("ValidationUtil validates Kalasalingam University @klu.ac.in institutional emails")
+        void testInstitutionalEmailValidation() {
+            assertTrue(ValidationUtil.isValidInstitutionalEmail("99527800392@klu.ac.in"));
+            assertTrue(ValidationUtil.isValidInstitutionalEmail("student@klu.ac.in"));
+            assertTrue(ValidationUtil.isValidInstitutionalEmail("john.doe@klu.ac.in"));
+
+            assertFalse(ValidationUtil.isValidInstitutionalEmail("user@gmail.com"));
+            assertFalse(ValidationUtil.isValidInstitutionalEmail("user@yahoo.com"));
+            assertFalse(ValidationUtil.isValidInstitutionalEmail("user@klu.ac.in.example.com"));
+            assertFalse(ValidationUtil.isValidInstitutionalEmail("user@attackerklu.ac.in"));
+            assertFalse(ValidationUtil.isValidInstitutionalEmail("user@campus.edu"));
+            assertFalse(ValidationUtil.isValidInstitutionalEmail(""));
+            assertFalse(ValidationUtil.isValidInstitutionalEmail(null));
+
+            assertDoesNotThrow(() -> ValidationUtil.validateInstitutionalEmail("99527800392@klu.ac.in"));
+            assertThrows(IllegalArgumentException.class, () -> ValidationUtil.validateInstitutionalEmail("user@gmail.com"));
+            assertThrows(IllegalArgumentException.class, () -> ValidationUtil.validateInstitutionalEmail("user@klu.ac.in.example.com"));
+        }
+
+        @Test
         @DisplayName("Requirement 9: ValidationUtil rejects invalid phone numbers")
         void testInvalidPhoneValidation() {
             assertFalse(ValidationUtil.isValidPhone("123")); // Too short

@@ -207,6 +207,81 @@ public class WebPortalMultiUserTest {
         assertTrue(content.contains("switchTab"), "Tab switching function intact");
     }
 
+    @Test
+    @DisplayName("9. Stale / Invalid Session Graceful Recovery: Clears dead cookie and serves fresh login")
+    void testStaleSessionGracefulRecovery() throws Exception {
+        URL url = new URL(getBaseUrl() + "/login");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Cookie", "ccms_session=completely-invalid-stale-session-id");
+        assertEquals(200, conn.getResponseCode());
+
+        String setCookie = conn.getHeaderField("Set-Cookie");
+        assertNotNull(setCookie, "Server must clear the stale cookie");
+        assertTrue(setCookie.contains("Max-Age=0") || setCookie.contains("Expires="), "Cookie must be set to expire immediately");
+
+        String cacheControl = conn.getHeaderField("Cache-Control");
+        assertNotNull(cacheControl);
+        assertTrue(cacheControl.contains("no-store") || cacheControl.contains("no-cache"), "Must set no-cache headers");
+
+        String content = readStream(conn);
+        assertTrue(content.contains("Campus Club System"), "Must serve clean login page without hangs");
+        assertTrue(content.contains("checkExistingSession"), "Login page includes session restoration script");
+    }
+
+    @Test
+    @DisplayName("10. Active Session Restoration: Valid session visiting /login redirects to /portal")
+    void testActiveSessionRedirectsToPortal() throws Exception {
+        // Log in to obtain a valid session
+        URL loginUrl = new URL(getBaseUrl() + "/api/auth/login");
+        HttpURLConnection loginConn = (HttpURLConnection) loginUrl.openConnection();
+        loginConn.setRequestMethod("POST");
+        loginConn.setRequestProperty("Content-Type", "application/json");
+        loginConn.setDoOutput(true);
+        try (OutputStream os = loginConn.getOutputStream()) {
+            os.write("{\"username\":\"team_lead\",\"password\":\"TeamLead@2026\"}".getBytes(StandardCharsets.UTF_8));
+        }
+        assertEquals(200, loginConn.getResponseCode());
+        String sessionCookie = loginConn.getHeaderField("Set-Cookie");
+        assertNotNull(sessionCookie);
+
+        // Visit /login with the valid session cookie
+        URL url = new URL(getBaseUrl() + "/login");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setInstanceFollowRedirects(false); // Inspect 302 directly
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Cookie", sessionCookie);
+        assertEquals(302, conn.getResponseCode(), "Active session must redirect from /login to /portal");
+        assertEquals("/portal", conn.getHeaderField("Location"));
+    }
+
+    @Test
+    @DisplayName("11. Role Login Verification: Admin, Coordinator, Teacher, and Student can authenticate")
+    void testAllRolesLogin() throws Exception {
+        String[][] credentials = {
+            {"team_lead", "TeamLead@2026", "ADMIN"},
+            {"coord_coding", "pass123", "COORDINATOR"},
+            {"teacher_reviewer", "Reviewer@2026", "TEACHER"},
+            {"student1", "pass123", "STUDENT"}
+        };
+
+        for (String[] cred : credentials) {
+            URL url = new URL(getBaseUrl() + "/api/auth/login");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+            String payload = String.format("{\"username\":\"%s\",\"password\":\"%s\"}", cred[0], cred[1]);
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(payload.getBytes(StandardCharsets.UTF_8));
+            }
+            assertEquals(200, conn.getResponseCode(), "Login must succeed for role " + cred[2]);
+            String body = readStream(conn);
+            assertTrue(body.contains("\"success\":true"), "Response must indicate success for " + cred[0]);
+            assertTrue(body.contains(cred[2]) || body.contains("TEACHER"), "User role must match expected role");
+        }
+    }
+
     private static String readStream(HttpURLConnection conn) throws Exception {
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(

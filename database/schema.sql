@@ -17,6 +17,10 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('STUDENT', 'COORDINATOR', 'ADMIN') NOT NULL,
     phone_number VARCHAR(20),
+    is_verified BOOLEAN DEFAULT TRUE,
+    verification_code VARCHAR(10) DEFAULT NULL,
+    otp_expires_at TIMESTAMP NULL DEFAULT NULL,
+    otp_attempts INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_users_role (role)
