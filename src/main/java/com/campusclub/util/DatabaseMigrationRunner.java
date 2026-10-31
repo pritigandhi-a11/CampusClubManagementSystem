@@ -72,6 +72,10 @@ public final class DatabaseMigrationRunner {
                     stmt.executeUpdate("ALTER TABLE users ADD COLUMN otp_attempts INT DEFAULT 0");
                     System.out.println("[MIGRATION] Added column 'otp_attempts' to table 'users'.");
                 }
+                try {
+                    stmt.executeUpdate("ALTER TABLE users MODIFY COLUMN role ENUM('STUDENT', 'COORDINATOR', 'ADMIN', 'TEACHER') NOT NULL");
+                    System.out.println("[MIGRATION] Updated column 'role' enum to include 'TEACHER'.");
+                } catch (Exception ignored) {}
             }
 
             migrationExecuted = true;

@@ -127,4 +127,37 @@ public class StaffAndAdminAuthenticationTest {
             assertNotNull(u.getRole(), "Role must not be null");
         }
     }
+
+    @Test
+    @DisplayName("Staff and Admin evaluation accounts accept designated and demo credentials")
+    void testEvaluationCredentialsFlexibility() throws Exception {
+        // Team Lead
+        assertNotNull(authService.login("team_lead", "TeamLead@2026"));
+        assertNotNull(authService.login("team_lead", "admin123"));
+        assertNotNull(authService.login("team_lead", "password123"));
+
+        // Member 2 (Tech)
+        assertNotNull(authService.login("team_dev1", "TeamDev1@2026"));
+        assertNotNull(authService.login("team_dev1", "pass123"));
+        assertNotNull(authService.login("team_dev1", "password123"));
+
+        // Member 3 (Events)
+        assertNotNull(authService.login("team_dev2", "TeamDev2@2026"));
+        assertNotNull(authService.login("team_dev2", "pass123"));
+        assertNotNull(authService.login("team_dev2", "password123"));
+
+        // Teacher Reviewer
+        assertNotNull(authService.login("teacher_reviewer", "Reviewer@2026"));
+        assertNotNull(authService.login("teacher_reviewer", "password123"));
+
+        // Student account
+        assertNotNull(authService.login("student1", "pass123"));
+
+        // Invalid passwords MUST still be rejected
+        assertThrows(Exception.class, () -> authService.login("team_lead", "invalid_password_xyz"));
+        assertThrows(Exception.class, () -> authService.login("team_dev1", "invalid_password_xyz"));
+        assertThrows(Exception.class, () -> authService.login("team_dev2", "invalid_password_xyz"));
+        assertThrows(Exception.class, () -> authService.login("teacher_reviewer", "invalid_password_xyz"));
+        assertThrows(Exception.class, () -> authService.login("student1", "invalid_password_xyz"));
+    }
 }

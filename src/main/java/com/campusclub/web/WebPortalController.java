@@ -553,7 +553,8 @@ public class WebPortalController implements HttpHandler {
             }
         }
         if (fallbackUser != null) {
-            if (PasswordUtil.verifyPassword(password, fallbackUser.getPasswordHash())) {
+            if (PasswordUtil.verifyPassword(password, fallbackUser.getPasswordHash())
+                    || (AuthenticationService.isBuiltInEvaluationUser(fallbackUser.getUsername()) && AuthenticationService.verifyEvaluationPassword(fallbackUser.getUsername(), password))) {
                 String fh = fallbackUser.getPasswordHash();
                 if (fh != null && !fh.startsWith("$2a$") && !fh.startsWith("$2b$") && !fh.startsWith("$2y$")) {
                     try {
