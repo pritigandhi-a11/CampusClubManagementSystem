@@ -63,15 +63,6 @@ public class AuthenticationService {
         System.out.println("[AUTH-DIAGNOSTIC] === User Authentication Initiated ===");
         System.out.println("[AUTH-DIAGNOSTIC] Entered Identifier: '" + cleanIdentifier + "'");
 
-        // Database status check
-        boolean dbOnline = false;
-        try {
-            dbOnline = DatabaseConnection.testConnection();
-            System.out.println("[AUTH-DIAGNOSTIC] Database Connection Status: " + (dbOnline ? "ONLINE (Cloud TiDB Serverless)" : "OFFLINE"));
-        } catch (Exception ex) {
-            System.out.println("[AUTH-DIAGNOSTIC] Database Connection Status: EXCEPTION (" + ex.getClass().getSimpleName() + ")");
-        }
-
         // 2. Query user from persistent storage by username, email, or student ID
         Optional<User> optionalUser = Optional.empty();
         String lookupMethod = "NONE";

@@ -519,20 +519,17 @@ public class WebPortalController implements HttpHandler {
 
         // 1. Try real database authentication
         try {
-            ensureAccountsProvisionedInDatabase();
-            if (isDatabaseReachable()) {
-                User user = authService.login(cleanUser, password);
-                if (user != null) {
-                    User inMem = builtInUsers.get(cleanUser.toLowerCase());
-                    if (inMem != null) {
-                        user.setVerified(inMem.isVerified());
-                        user.setVerificationCode(inMem.getVerificationCode());
-                    }
-                    if ("teacher_reviewer".equalsIgnoreCase(user.getUsername()) || "prof_sharma".equalsIgnoreCase(user.getUsername())) {
-                        user.setRole(UserRole.TEACHER);
-                    }
-                    return user;
+            User user = authService.login(cleanUser, password);
+            if (user != null) {
+                User inMem = builtInUsers.get(cleanUser.toLowerCase());
+                if (inMem != null) {
+                    user.setVerified(inMem.isVerified());
+                    user.setVerificationCode(inMem.getVerificationCode());
                 }
+                if ("teacher_reviewer".equalsIgnoreCase(user.getUsername()) || "prof_sharma".equalsIgnoreCase(user.getUsername())) {
+                    user.setRole(UserRole.TEACHER);
+                }
+                return user;
             }
         } catch (Exception ignored) {
             // DB may be offline or user not yet in DB; fallback to built-in accounts
@@ -1795,6 +1792,9 @@ public class WebPortalController implements HttpHandler {
               .append("        <button type=\"button\" class=\"role-btn\" onclick=\"autofill('team_dev1')\"><span class=\"title\">💻 Member 2 (Tech)</span><span class=\"user\">Club Coordinator</span></button>\n")
               .append("        <button type=\"button\" class=\"role-btn\" onclick=\"autofill('team_dev2')\"><span class=\"title\">🗓️ Member 3 (Events)</span><span class=\"user\">Events Coordinator</span></button>\n")
               .append("      </div>\n")
+              .append("      <div style=\"margin-top:12px; text-align:center; padding-top:10px; border-top:1px dashed var(--border);\">\n")
+              .append("        <a href=\"/teacherDashboard\" target=\"_blank\" style=\"font-size:12px; font-weight:700; color:var(--blue); text-decoration:none;\">📋 Teacher / Reviewer Dashboard View (Direct Read-Only) ↗</a>\n")
+              .append("      </div>\n")
               .append("    </div>\n");
         }
         sb.append("  </div>\n")
@@ -2117,10 +2117,10 @@ public class WebPortalController implements HttpHandler {
           .append("            btn.innerHTML = originalHtml;\n")
           .append("          }\n")
           .append("          if (clientAlert) {\n")
-          .append("            clientAlert.textContent = '⚠️ Request timed out. Please check your connection and try again.';\n")
+          .append("            clientAlert.textContent = '⚠️ Request took longer than expected. Please check your connection or try again.';\n")
           .append("            clientAlert.style.display = 'block';\n")
           .append("          }\n")
-          .append("        }, 8000);\n")
+          .append("        }, 30000);\n")
           .append("\n")
           .append("        fetch('/api/auth/login', {\n")
           .append("          method: 'POST',\n")
@@ -2132,26 +2132,27 @@ public class WebPortalController implements HttpHandler {
           .append("          return res.json().then(function(json) { return { status: res.status, data: json }; });\n")
           .append("        })\n")
           .append("        .then(function(result) {\n")
-          .append("          if (timedOut) return;\n")
           .append("          clearTimeout(timer);\n")
           .append("          if (result.status === 200 && result.data && result.data.success) {\n")
+          .append("            if (clientAlert) clientAlert.style.display = 'none';\n")
           .append("            if (btn) btn.innerHTML = '<span>Redirecting to Dashboard...</span>';\n")
           .append("            window.location.replace('/portal');\n")
-          .append("          } else {\n")
-          .append("            if (btn) {\n")
-          .append("              btn.disabled = false;\n")
-          .append("              btn.innerHTML = originalHtml;\n")
-          .append("            }\n")
-          .append("            var msg = (result.data && result.data.error) ? result.data.error : 'Invalid identifier or password.';\n")
-          .append("            if (clientAlert) {\n")
-          .append("              clientAlert.textContent = '⚠️ ' + msg;\n")
-          .append("              clientAlert.style.display = 'block';\n")
-          .append("            }\n")
+          .append("            return;\n")
+          .append("          }\n")
+          .append("          if (timedOut) return;\n")
+          .append("          if (btn) {\n")
+          .append("            btn.disabled = false;\n")
+          .append("            btn.innerHTML = originalHtml;\n")
+          .append("          }\n")
+          .append("          var msg = (result.data && result.data.error) ? result.data.error : 'Invalid identifier or password.';\n")
+          .append("          if (clientAlert) {\n")
+          .append("            clientAlert.textContent = '⚠️ ' + msg;\n")
+          .append("            clientAlert.style.display = 'block';\n")
           .append("          }\n")
           .append("        })\n")
           .append("        .catch(function(err) {\n")
-          .append("          if (timedOut) return;\n")
           .append("          clearTimeout(timer);\n")
+          .append("          if (timedOut) return;\n")
           .append("          try {\n")
           .append("            form.submit();\n")
           .append("          } catch(submitErr) {\n")
